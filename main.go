@@ -49,6 +49,8 @@ func main() {
 		usbs := iommu.MatchDEVs(groups,`USB controller`)
 		printoutput(usbs)
 		printIOMMUgroup(*iommu_group)
+	} else if len(*iommu_group) > 0 {
+		printIOMMUgroup(*iommu_group)
 	}  else {
 		// Default behaviour mimicks the bash variant that this is based on
 		out := iommu.GetAllDevices(groups)

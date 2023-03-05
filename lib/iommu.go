@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 )
 
-func ListDirs(path string) []string{
+func listDirs(path string) []string{
 	// Make a string array to hold all dir names
 	var dirs []string
 	files, err := os.ReadDir(path)
@@ -22,16 +23,16 @@ func ListDirs(path string) []string{
 
 // Function to get all IOMMU Groups on the machine
 func GetIOMMU_Groups() []string{
-	groups := ListDirs("/sys/kernel/iommu_groups")
+	groups := listDirs("/sys/kernel/iommu_groups")
 
 	return groups
 }
 
-func GetIOMMU_Devices(groups []string) []string{
+func getIOMMU_Devices(groups []string) []string{
 	var devices []string
 
 	for _, group := range groups {
-		devices = ListDirs("/sys/kernel/iommu_groups/" + group + "/devices/")
+		devices = listDirs(fmt.Sprintf("/sys/kernel/iommu_groups/%s/devices/", group))
 	}
 
 	return devices
@@ -41,7 +42,7 @@ func GetAllDevices(groups []string) []string {
 	var lspci_devs []string
 
 	for _, group := range groups {
-		devices := GetIOMMU_Devices([]string{group})
+		devices := getIOMMU_Devices([]string{group})
 		for _, device := range devices {
 			cmd := exec.Command("lspci", "-nns", device)
 			
@@ -54,14 +55,21 @@ func GetAllDevices(groups []string) []string {
 			lspci_devs = append(lspci_devs, fmt.Sprintf("IOMMU Group %s: %s", group, out.String()))
 		}
 	}
-
 	return lspci_devs
 }
 
-func GetGPUs(groups []string) {
+func MatchDEVs(groups []string, regex string) []string{
+	var devs []string
+
 	output := GetAllDevices(groups)
+	gpuReg, err := regexp.Compile(regex)
+	ErrorCheck(err)
 
 	for _, line := range output {
-		fmt.Print(line)
+		if gpuReg.MatchString(line) {
+			devs = append(devs, line)
+		}
 	}
+
+	return devs
 }

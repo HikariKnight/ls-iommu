@@ -9,9 +9,15 @@ import (
 )
 func main() {
 	parser := argparse.NewParser("ls-iommu", "A Tool to print out all devices and their IOMMU groups")
-	gpu := parser.Flag("g", "gpu", &argparse.Options{Required: false, Help: "List all GPUs and devices related to them"})
 
-	var pf = fmt.Printf
+	//var pf = fmt.Printf
+
+	// Placeholder arg atm
+	gpu := parser.Flag("g", "gpu", &argparse.Options{
+		Required: false,
+		Help: "List all GPUs and devices related to them",
+	})
+
 	// Parse input
 	err := parser.Parse(os.Args)
 	if err != nil {
@@ -20,10 +26,15 @@ func main() {
 		fmt.Print(parser.Usage(err))
 	}
 
+	groups := iommu.GetIOMMU_Groups()
+
 	if *gpu {
-		pf("GPU arg: %v\n", *gpu)
+		iommu.GetGPUs(groups)
+	} else {
+		out := iommu.GetAllDevices(groups)
+		for _, line := range out {
+			fmt.Print(line)
+		}
+
 	}
-
-	iommu.GetIOMMU_Groups()
-
 }

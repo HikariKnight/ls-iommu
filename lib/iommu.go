@@ -20,4 +20,4 @@ func GetIOMMU_Groups() {
 	}
 
 	fmt.Println(groups)
-}
+} 

@@ -49,16 +49,16 @@ func main() {
 	// Work with the output depending on arguments given
 	if *gpu {
 		// List all GPUs (3d controllers are ignored)
-		gpus := iommu.MatchDEVs(false, `VGA`)
+		gpus := iommu.MatchSubclass(`VGA`)
 		printoutput(gpus)
 		printIOMMUgroup(*iommu_group)
 	} else if *usb {
 		// List all USB controllers
-		usbs := iommu.MatchDEVs(false,`USB controller`)
+		usbs := iommu.MatchSubclass(`USB controller`)
 		printoutput(usbs)
 		printIOMMUgroup(*iommu_group)
 	} else if *test {
-		newTest(false, `VGA`)
+		newTest(false, `USB controller`)
 	} else if len(*iommu_group) > 0 {
 		printIOMMUgroup(*iommu_group)
 	}  else {
@@ -106,21 +106,15 @@ func newTest(kernelmodules bool, searchval string) []string{
 	for _, group := range alldevs.Groups {
 		// For each device
 		for _, device := range group.Devices {
+			// If the device has a subclass matching what we are looking for
 			if strings.Contains(device.Subclass.Name,searchval) {
+				// Generate the device line
 				line := iommu.GenDeviceLine(group.ID, device)
-				fmt.Print(line)
+				// Append device line
+				devs = append(devs, line)
 			}
 		}
 	}
-	/*output := iommu.GetAllDevices(kernelmodules)
-	gpuReg, err := regexp.Compile(regex)
-	iommu.ErrorCheck(err)
-
-	for _, line := range output {
-		if gpuReg.MatchString(line) {
-			devs = append(devs, line)
-		}
-	}*/
 
 	return devs
 }

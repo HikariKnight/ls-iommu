@@ -81,15 +81,21 @@ func printIOMMUgroup(groups []int) {
 	if len(groups) > 0 {
 		// Get all IOMMU devices
 		alldevs := iommu.NewIOMMU()
+
 		// For each IOMMU group given we will print the devices in each group
 		for _, group := range groups {
-			// For each device in specified IOMMU group
-			for _, device := range alldevs.Groups[group].Devices {
-				// Generate output line
-				line := iommu.GenDeviceLine(group, device)
+			// Check if the IOMMU Group exists
+			if _, iommu_num := alldevs.Groups[group]; !iommu_num {
+				iommu.ErrorCheck(fmt.Errorf("IOMMU Group %v does not exist", group))
+			} else {
+				// For each device in specified IOMMU group
+				for _, device := range alldevs.Groups[group].Devices {
+					// Generate output line
+					line := iommu.GenDeviceLine(group, device)
 
-				// Print the device info
-				fmt.Print(line)
+					// Print the device info
+					fmt.Print(line)
+				}
 			}
 		}
 	}

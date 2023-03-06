@@ -1,75 +1,83 @@
 package iommu
 
 import (
-	"bytes"
-	"fmt"
-	"os"
-	"os/exec"
+	"log"
+	"path/filepath"
 	"regexp"
+	"strconv"
+	"strings"
+
+	"github.com/jaypipes/ghw"
+	ghwpci "github.com/jaypipes/ghw/pkg/pci"
 )
 
-func listDirs(path string) []string{
-	// Make a string array to hold all dir names
-	var dirs []string
-	files, err := os.ReadDir(path)
-	ErrorCheck(err)
+type IOMMU struct {
+	Groups map[int]*Group
+}
 
-	for _, file := range files {
-		dirs = append(dirs, file.Name())
+func (i *IOMMU) AddGroup(group *Group) {
+	i.Groups[group.ID] = group
+}
+
+type Group struct {
+	ID      int
+	Devices map[string]*ghwpci.Device
+}
+
+func (g *Group) AddDevice(device *ghwpci.Device) {
+	g.Devices[(*device).Address] = device
+}
+
+func NewGroup(id int, devices map[string]*ghwpci.Device) *Group {
+	return &Group{
+		ID:      id,
+		Devices: devices,
+	}
+}
+
+func (i *IOMMU) Read() {
+	i.Groups = make(map[int]*Group)
+	// Get all groups and associated devices
+	iommu_devices, err := filepath.Glob("/sys/kernel/iommu_groups/*/devices/*")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	pci, err := ghw.PCI(ghw.WithDisableWarnings())
+	if err != nil {
+		log.Fatalln(err)
 	}
 
-	return dirs
-}
+	iommu_regex := regexp.MustCompile(`/sys/kernel/iommu_groups/(.*)/devices/(.*)`)
+	for _, iommu_device := range iommu_devices {
+		matches := iommu_regex.FindStringSubmatch(iommu_device)
+		group_id, err := strconv.Atoi(matches[1])
+		if err != nil {
+			// Failed to properly parse groupid into integer, invalid for a group id, skip it
+			continue
+		}
+		device_id := matches[2]
 
-// Function to get all IOMMU Groups on the machine
-func GetIOMMU_Groups() []string{
-	groups := listDirs("/sys/kernel/iommu_groups")
+		if strings.HasPrefix(device_id, "0000:") {
+			device := pci.GetDevice(device_id)
 
-	return groups
-}
-
-func getIOMMU_Devices(groups []string) []string{
-	var devices []string
-
-	for _, group := range groups {
-		devices = listDirs(fmt.Sprintf("/sys/kernel/iommu_groups/%s/devices/", group))
-	}
-
-	return devices
-}
-
-func GetAllDevices(groups []string) []string {
-	var lspci_devs []string
-
-	for _, group := range groups {
-		devices := getIOMMU_Devices([]string{group})
-		for _, device := range devices {
-			cmd := exec.Command("lspci", "-nns", device)
-			
-			var out bytes.Buffer
-			cmd.Stdout = &out
-
-			err := cmd.Run()
-			ErrorCheck(err)
-
-			lspci_devs = append(lspci_devs, fmt.Sprintf("IOMMU Group %s: %s", group, out.String()))
+			// If the group doesn't exist in the struct, add it
+			_, exists := i.Groups[group_id]
+			if !exists {
+				grp := &Group{
+					ID:      group_id,
+					Devices: make(map[string]*ghwpci.Device),
+				}
+				grp.AddDevice(device)
+				i.AddGroup(grp)
+			} else {
+				i.Groups[group_id].AddDevice(device)
+			}
 		}
 	}
-	return lspci_devs
 }
 
-func MatchDEVs(groups []string, regex string) []string{
-	var devs []string
-
-	output := GetAllDevices(groups)
-	gpuReg, err := regexp.Compile(regex)
-	ErrorCheck(err)
-
-	for _, line := range output {
-		if gpuReg.MatchString(line) {
-			devs = append(devs, line)
-		}
-	}
-
-	return devs
+func NewIOMMU() *IOMMU {
+	iommu := &IOMMU{}
+	iommu.Read()
+	return iommu
 }

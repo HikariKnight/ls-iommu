@@ -1,7 +1,6 @@
 package iommu
 
 import (
-	"log"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -39,13 +38,9 @@ func (i *IOMMU) Read() {
 	i.Groups = make(map[int]*Group)
 	// Get all groups and associated devices
 	iommu_devices, err := filepath.Glob("/sys/kernel/iommu_groups/*/devices/*")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	ErrorCheck(err)
 	pci, err := ghw.PCI(ghw.WithDisableWarnings())
-	if err != nil {
-		log.Fatalln(err)
-	}
+	ErrorCheck(err)
 
 	iommu_regex := regexp.MustCompile(`/sys/kernel/iommu_groups/(.*)/devices/(.*)`)
 	for _, iommu_device := range iommu_devices {

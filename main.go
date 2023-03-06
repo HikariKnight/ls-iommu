@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	iommu "github.com/HikariKnight/ls-iommu/lib"
 	"github.com/akamensky/argparse"
@@ -22,9 +23,19 @@ func main() {
 		Help: "List all USB controllers.",
 	})
 
-	iommu_group := parser.StringList("i","group", &argparse.Options{
+	iommu_group := parser.IntList("i","group", &argparse.Options{
 		Required: false,
 		Help: "List everything in the IOMMU groups given. Supply argument multiple times to list additional groups.",
+	})
+
+	kernelmodules := parser.Flag("k","kernel", &argparse.Options{
+		Required: false,
+		Help: "Lists kernel modules using the devices and subsystems. (ignored if other options are present)",
+	})
+
+	test := parser.Flag("t", "test", &argparse.Options{
+		Required: false,
+		Help: "function im actively testing, does not do anything you care about (might be broken)",
 	})
 
 	// Parse arguments
@@ -35,35 +46,34 @@ func main() {
 		fmt.Print(parser.Usage(err))
 	}
 
-	// Get all the IOMMU groups and their devices as a string array
-	groups := iommu.GetIOMMU_Groups()
-
 	// Work with the output depending on arguments given
 	if *gpu {
 		// List all GPUs (3d controllers are ignored)
-		gpus := iommu.MatchDEVs(groups, `VGA`)
+		gpus := iommu.MatchDEVs(false, `VGA`)
 		printoutput(gpus)
 		printIOMMUgroup(*iommu_group)
 	} else if *usb {
 		// List all USB controllers
-		usbs := iommu.MatchDEVs(groups,`USB controller`)
+		usbs := iommu.MatchDEVs(false,`USB controller`)
 		printoutput(usbs)
 		printIOMMUgroup(*iommu_group)
+	} else if *test {
+		newTest(*iommu_group)
 	} else if len(*iommu_group) > 0 {
 		printIOMMUgroup(*iommu_group)
 	}  else {
 		// Default behaviour mimicks the bash variant that this is based on
-		out := iommu.GetAllDevices(groups)
+		out := iommu.GetAllDevices(*kernelmodules)
 		printoutput(out)
 	}
 }
 
 // Print all devices in IOMMU group
-func printIOMMUgroup(groups []string) {
+func printIOMMUgroup(groups []int) {
 	if len(groups) > 0 {
 		// For each IOMMU group given we will print the devices in each group
 		for _, group := range groups {
-			devs := iommu.MatchDEVs(groups, `Group ` + group)
+			devs := iommu.MatchDEVs(false, `Group ` + strconv.Itoa(group))
 			printoutput(devs)
 		}
 	}
@@ -75,4 +85,17 @@ func printoutput(out []string)  {
 	for _, line := range out {
 		fmt.Print(line)
 	}
+}
+
+func newTest(groups []int) {
+	if len(groups) > 0 {
+		devs := iommu.NewIOMMU()
+		// For each IOMMU group given we will print the devices in each group
+		for _, group := range groups {
+			//devs := iommu.MatchDEVs(false, `Group ` + strconv.Itoa(group))
+			fmt.Println(devs.Groups[group])
+			//printoutput(devs)
+		}
+	}
+	os.Exit(0)
 }

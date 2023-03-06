@@ -1,6 +1,9 @@
 package iommu
 
 import (
+	"bytes"
+	"fmt"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -75,4 +78,49 @@ func NewIOMMU() *IOMMU {
 	iommu := &IOMMU{}
 	iommu.Read()
 	return iommu
+}
+
+func GetAllDevices(kernelmodules bool) []string {
+	iommu := NewIOMMU()
+	var lspci_devs []string
+
+	var arg = "-nns"
+	if kernelmodules {
+		arg = "-nnks"
+	}
+
+	for id, group := range iommu.Groups {
+		for _, device := range group.Devices {
+			cmd := exec.Command("lspci", arg, device.Address)
+			
+			var out bytes.Buffer
+			cmd.Stdout = &out
+
+			err := cmd.Run()
+			ErrorCheck(err)
+
+			lspci_devs = append(lspci_devs, fmt.Sprintf("IOMMU Group %v: %s", id, out.String()))
+		}
+	}
+
+	return lspci_devs
+}
+
+
+// Old deprecated functions marked for removal/rework below this comment
+
+func MatchDEVs(kernelmodules bool, regex string) []string{
+	var devs []string
+
+	output := GetAllDevices(kernelmodules)
+	gpuReg, err := regexp.Compile(regex)
+	ErrorCheck(err)
+
+	for _, line := range output {
+		if gpuReg.MatchString(line) {
+			devs = append(devs, line)
+		}
+	}
+
+	return devs
 }

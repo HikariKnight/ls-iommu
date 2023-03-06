@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"regexp"
+	"strings"
 
 	iommu "github.com/HikariKnight/ls-iommu/lib"
 	"github.com/akamensky/argparse"
@@ -80,36 +80,13 @@ func printIOMMUgroup(groups []int) {
 	// As long as we are asked to get devices from any specific IOMMU groups
 	if len(groups) > 0 {
 		// Get all IOMMU devices
-		devs := iommu.NewIOMMU()
+		alldevs := iommu.NewIOMMU()
 		// For each IOMMU group given we will print the devices in each group
 		for _, group := range groups {
 			// For each device in specified IOMMU group
-			for _, device := range devs.Groups[group].Devices {
-				var line string
-
-				// If the device has no revision, ommit the (rev ID), in both cases we generate the line with device info
-				if device.Revision != "0x00" {
-					line = fmt.Sprintf("IOMMU Group %v: %s %s: %s %s [%s:%s] (rev %s)\n",
-					group,
-					device.Address,
-					device.Subclass.Name,
-					device.Vendor.Name,
-					device.Product.Name,
-					device.Vendor.ID,
-					device.Product.ID,
-					device.Revision[len(device.Revision)-2:],
-					)
-				} else {
-					line = fmt.Sprintf("IOMMU Group %v: %s %s: %s %s [%s:%s]\n",
-					group,
-					device.Address,
-					device.Subclass.Name,
-					device.Vendor.Name,
-					device.Product.Name,
-					device.Vendor.ID,
-					device.Product.ID,
-					)
-				}
+			for _, device := range alldevs.Groups[group].Devices {
+				// Generate output line
+				line := iommu.GenDeviceLine(group, device)
 
 				// Print the device info
 				fmt.Print(line)
@@ -119,10 +96,23 @@ func printIOMMUgroup(groups []int) {
 	os.Exit(0)
 }
 
-func newTest(kernelmodules bool, regex string) []string{
+func newTest(kernelmodules bool, searchval string) []string{
 	var devs []string
 
-	output := iommu.GetAllDevices(kernelmodules)
+	// Get all IOMMU devices
+	alldevs := iommu.NewIOMMU()
+
+	// Iterate through the groups
+	for _, group := range alldevs.Groups {
+		// For each device
+		for _, device := range group.Devices {
+			if strings.Contains(device.Subclass.Name,searchval) {
+				line := iommu.GenDeviceLine(group.ID, device)
+				fmt.Print(line)
+			}
+		}
+	}
+	/*output := iommu.GetAllDevices(kernelmodules)
 	gpuReg, err := regexp.Compile(regex)
 	iommu.ErrorCheck(err)
 
@@ -130,7 +120,7 @@ func newTest(kernelmodules bool, regex string) []string{
 		if gpuReg.MatchString(line) {
 			devs = append(devs, line)
 		}
-	}
+	}*/
 
 	return devs
 }

@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"strconv"
+	"regexp"
 
 	iommu "github.com/HikariKnight/ls-iommu/lib"
 	"github.com/akamensky/argparse"
@@ -58,7 +58,7 @@ func main() {
 		printoutput(usbs)
 		printIOMMUgroup(*iommu_group)
 	} else if *test {
-		newTest(*iommu_group)
+		newTest(false, `VGA`)
 	} else if len(*iommu_group) > 0 {
 		printIOMMUgroup(*iommu_group)
 	}  else {
@@ -68,18 +68,6 @@ func main() {
 	}
 }
 
-// Print all devices in IOMMU group
-func printIOMMUgroup(groups []int) {
-	if len(groups) > 0 {
-		// For each IOMMU group given we will print the devices in each group
-		for _, group := range groups {
-			devs := iommu.MatchDEVs(false, `Group ` + strconv.Itoa(group))
-			printoutput(devs)
-		}
-	}
-	os.Exit(0)
-}
-
 // Function to just print out a string array to STDOUT
 func printoutput(out []string)  {
 	for _, line := range out {
@@ -87,15 +75,62 @@ func printoutput(out []string)  {
 	}
 }
 
-func newTest(groups []int) {
+// Function to print everything inside a specific IOMMU group
+func printIOMMUgroup(groups []int) {
+	// As long as we are asked to get devices from any specific IOMMU groups
 	if len(groups) > 0 {
+		// Get all IOMMU devices
 		devs := iommu.NewIOMMU()
 		// For each IOMMU group given we will print the devices in each group
 		for _, group := range groups {
-			//devs := iommu.MatchDEVs(false, `Group ` + strconv.Itoa(group))
-			fmt.Println(devs.Groups[group])
-			//printoutput(devs)
+			// For each device in specified IOMMU group
+			for _, device := range devs.Groups[group].Devices {
+				var line string
+
+				// If the device has no revision, ommit the (rev ID), in both cases we generate the line with device info
+				if device.Revision != "0x00" {
+					line = fmt.Sprintf("IOMMU Group %v: %s %s: %s %s [%s:%s] (rev %s)\n",
+					group,
+					device.Address,
+					device.Subclass.Name,
+					device.Vendor.Name,
+					device.Product.Name,
+					device.Vendor.ID,
+					device.Product.ID,
+					device.Revision[len(device.Revision)-2:],
+					)
+				} else {
+					line = fmt.Sprintf("IOMMU Group %v: %s %s: %s %s [%s:%s]\n",
+					group,
+					device.Address,
+					device.Subclass.Name,
+					device.Vendor.Name,
+					device.Product.Name,
+					device.Vendor.ID,
+					device.Product.ID,
+					)
+				}
+
+				// Print the device info
+				fmt.Print(line)
+			}
 		}
 	}
 	os.Exit(0)
+}
+
+func newTest(kernelmodules bool, regex string) []string{
+	var devs []string
+
+	output := iommu.GetAllDevices(kernelmodules)
+	gpuReg, err := regexp.Compile(regex)
+	iommu.ErrorCheck(err)
+
+	for _, line := range output {
+		if gpuReg.MatchString(line) {
+			devs = append(devs, line)
+		}
+	}
+
+	return devs
 }

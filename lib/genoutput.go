@@ -10,7 +10,6 @@ import (
 func GenDeviceLine(group int, device *pci.Device) string {
 	var line string
 	pciaddrclean := regexp.MustCompile(`^\d+:`)
-	cleanoutput := regexp.MustCompile(`^IOMMU Group\s{1}\d+:`)
 
 	// If the device has no revision, ommit the (rev ID), in both cases we generate the line with device info
 	if device.Revision != "0x00" {

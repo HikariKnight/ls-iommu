@@ -41,7 +41,7 @@ func main() {
 
 	kernelmodules := parser.Flag("k", "kernel", &argparse.Options{
 		Required: false,
-		Help:     "Lists kernel modules using the devices and subsystems.",
+		Help:     "Lists subsystems and kernel drivers using the devices.",
 		Default:  false,
 	})
 

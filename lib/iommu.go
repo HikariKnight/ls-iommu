@@ -56,7 +56,7 @@ func (i *IOMMU) Read() {
 		}
 		device_id := matches[2]
 
-		r := regexp.MustCompile(`^([a-z0-0]{1,4}):`)
+		r := regexp.MustCompile(`^([a-z0-9]{1,4}):`)
 
 		if r.MatchString(device_id) {
 			device := pci.GetDevice(device_id)

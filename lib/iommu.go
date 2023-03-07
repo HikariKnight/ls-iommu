@@ -84,13 +84,18 @@ func GetAllDevices(kernelmodules bool) []string {
 	iommu := NewIOMMU()
 	var lspci_devs []string
 
+	// Assume we want normal output by default
 	var arg = "-nns"
+
+	// Change to listing kernel modules and subsystems if requested
 	if kernelmodules {
 		arg = "-nnks"
 	}
 
-	for id, group := range iommu.Groups {
-		for _, device := range group.Devices {
+	// Iterate through the IOMMU groups and get the device info
+	for id := 0; id < len(iommu.Groups); id++ {
+		// Iterate each device
+		for _, device := range iommu.Groups[id].Devices {
 			cmd := exec.Command("lspci", arg, device.Address)
 			
 			var out bytes.Buffer
@@ -113,13 +118,13 @@ func MatchSubclass(searchval string) []string {
 	alldevs := NewIOMMU()
 
 	// Iterate through the groups
-	for _, group := range alldevs.Groups {
+	for id := 0; id < len(alldevs.Groups); id++ {
 		// For each device
-		for _, device := range group.Devices {
+		for _, device := range alldevs.Groups[id].Devices {
 			// If the device has a subclass matching what we are looking for
 			if strings.Contains(device.Subclass.Name,searchval) {
 				// Generate the device line
-				line := GenDeviceLine(group.ID, device)
+				line := GenDeviceLine(id, device)
 				// Append device line
 				devs = append(devs, line)
 			}
@@ -128,7 +133,6 @@ func MatchSubclass(searchval string) []string {
 
 	return devs
 }
-
 
 // Old deprecated functions marked for removal/rework below this comment
 

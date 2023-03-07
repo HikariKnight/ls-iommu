@@ -56,7 +56,9 @@ func (i *IOMMU) Read() {
 		}
 		device_id := matches[2]
 
-		if strings.HasPrefix(device_id, "0000:") {
+		r := regexp.MustCompile(`^([a-z0-9]{1,4}):`)
+
+		if r.MatchString(device_id) {
 			device := pci.GetDevice(device_id)
 
 			// If the group doesn't exist in the struct, add it
@@ -98,7 +100,7 @@ func GetAllDevices(kernelmodules bool) []string {
 		// Iterate each device
 		for _, device := range iommu.Groups[id].Devices {
 			cmd := exec.Command("lspci", arg, device.Address)
-			
+
 			var out bytes.Buffer
 			cmd.Stdout = &out
 
@@ -123,7 +125,7 @@ func MatchSubclass(searchval string) []string {
 		// For each device
 		for _, device := range alldevs.Groups[id].Devices {
 			// If the device has a subclass matching what we are looking for
-			if strings.Contains(device.Subclass.Name,searchval) {
+			if strings.Contains(device.Subclass.Name, searchval) {
 				// Generate the device line
 				line := GenDeviceLine(id, device)
 				// Append device line
@@ -167,7 +169,7 @@ func GetDevicesFromGroups(groups []int) []string {
 
 // Old deprecated functions marked for removal/rework below this comment
 
-func MatchDEVs(kernelmodules bool, regex string) []string{
+func MatchDEVs(kernelmodules bool, regex string) []string {
 	var devs []string
 
 	output := GetAllDevices(kernelmodules)

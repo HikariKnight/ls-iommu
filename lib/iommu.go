@@ -103,7 +103,7 @@ func GetAllDevices(kernelmodules ...bool) []string {
 	return lspci_devs
 }
 
-func MatchSubclass(searchval string, kernelmodules ...bool) []string {
+func MatchSubclass(searchval string, related int, kernelmodules ...bool) []string {
 	var devs []string
 
 	// Get all IOMMU devices
@@ -123,6 +123,16 @@ func MatchSubclass(searchval string, kernelmodules ...bool) []string {
 				// Generate the device list with the data we want
 				line := generateDevList(id, device, kernelmodules[0])
 				devs = append(devs, line)
+
+				// If we want to search for related devices
+				if related > 0 && searchval != `USB controller` {
+					// Find relatives and add them to the list
+					relatives_list := findRelatedDevices(device.Vendor.ID, related, kernelmodules[0])
+					devs = append(devs, relatives_list...)
+				} else if related > 0 && searchval == `USB controller` {
+					other := GetDevicesFromGroups([]int{id},kernelmodules[0])
+					devs = append(devs, other...)
+				}
 			}
 		}
 	}
@@ -163,6 +173,33 @@ func GetDevicesFromGroups(groups []int, kernelmodules ...bool) []string {
 		}
 	}
 	return output
+}
+
+func findRelatedDevices(vendorid string, related int, kernelmodules bool) []string {
+	var devs []string
+
+	// Get all IOMMU devices
+	alldevs := NewIOMMU()
+
+	// Iterate through the groups
+	for id := 0; id < len(alldevs.Groups); id++ {
+		// For each device
+		for _, device := range alldevs.Groups[id].Devices {
+			// If the device has a vendor ID matching what we are looking for
+			if strings.Contains(device.Vendor.ID, vendorid) {
+				// Generate the device list with the data we want
+				line := generateDevList(id, device, kernelmodules)
+				devs = append(devs, line)
+
+				if related > 2 {
+					other := GetDevicesFromGroups([]int{id},kernelmodules)
+					devs = append(devs, other...)
+				}
+			}
+		}
+	}
+
+	return devs
 }
 
 // Old deprecated functions marked for removal/rework below this comment

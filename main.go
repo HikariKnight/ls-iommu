@@ -29,6 +29,11 @@ func main() {
 		Help:     "List all Network controllers.",
 	})
 
+	related := parser.FlagCounter("r", "related", &argparse.Options{
+		Required: false,
+		Help:     "Attempt to list related devices that share Vendor ID or\n\t\t IOMMU Groups (used with -g -u and -n), pass -rr if you want to search using both when used with -g or -n\n\t\t Note: -rr can be inaccurate or too broad when many devices share Vendor ID",
+	})
+
 	iommu_group := parser.IntList("i", "group", &argparse.Options{
 		Required: false,
 		Help:     "List everything in the IOMMU groups given. Supply argument multiple times to list additional groups.",
@@ -46,12 +51,13 @@ func main() {
 		// In case of error print error and print usage
 		// This can also be done by passing -h or --help flags
 		fmt.Print(parser.Usage(err))
+		os.Exit(4)
 	}
 
 	// Work with the output depending on arguments given
 	if *gpu {
 		// Get all GPUs (3d controllers are ignored)
-		output := iommu.MatchSubclass(`VGA`, *kernelmodules)
+		output := iommu.MatchSubclass(`VGA`, *related, *kernelmodules)
 
 		// Get all devices in specified IOMMU groups and append it to the output
 		other := iommu.GetDevicesFromGroups(*iommu_group, *kernelmodules)
@@ -62,7 +68,7 @@ func main() {
 		os.Exit(0)
 	} else if *usb {
 		// Get all USB controllers
-		output := iommu.MatchSubclass(`USB controller`, *kernelmodules)
+		output := iommu.MatchSubclass(`USB controller`, *related, *kernelmodules)
 
 		// Get all devices in specified IOMMU groups and append it to the output
 		other := iommu.GetDevicesFromGroups(*iommu_group, *kernelmodules)
@@ -73,10 +79,10 @@ func main() {
 		os.Exit(0)
 	} else if *nic {
 		// Get all Ethernet controllers
-		output := iommu.MatchSubclass(`Ethernet controller`, *kernelmodules)
+		output := iommu.MatchSubclass(`Ethernet controller`, *related, *kernelmodules)
 
 		// Get all Wi-Fi controllers
-		wifi := iommu.MatchSubclass(`Network controller`, *kernelmodules)
+		wifi := iommu.MatchSubclass(`Network controller`, *related, *kernelmodules)
 		output = append(output, wifi...)
 
 		// Get all devices in specified IOMMU groups and append it to the output

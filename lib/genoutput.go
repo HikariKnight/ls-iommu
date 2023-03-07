@@ -103,11 +103,16 @@ func GenKernelInfo(group int, device *pci.Device) string {
 	return line
 }
 
-func generateDevList(id int, device *pci.Device, kernelmodules ...int) string {
+func generateDevList(id int, device *pci.Device, kernelmodules ...bool) string {
 	var line string
 
+	// If kernelmodules flag was not passed, set it to false
+	if len(kernelmodules) == 0 {
+		kernelmodules = append(kernelmodules, false)
+	}
+
 	// If user requested kernel modules
-	if len(kernelmodules) > 0 {
+	if kernelmodules[0] {
 		// Generate the line with kernel modules
 		line = fmt.Sprintf(
 			"%s%s",

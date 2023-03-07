@@ -53,7 +53,7 @@ func main() {
 		output := iommu.MatchSubclass(`VGA`, *kernelmodules)
 
 		// Get all devices in specified IOMMU groups and append it to the output
-		other := iommu.GetDevicesFromGroups(*iommu_group)
+		other := iommu.GetDevicesFromGroups(*iommu_group, *kernelmodules)
 		output = append(output, other...)
 
 		// Print the output and exit
@@ -64,7 +64,7 @@ func main() {
 		output := iommu.MatchSubclass(`USB controller`, *kernelmodules)
 
 		// Get all devices in specified IOMMU groups and append it to the output
-		other := iommu.GetDevicesFromGroups(*iommu_group)
+		other := iommu.GetDevicesFromGroups(*iommu_group, *kernelmodules)
 		output = append(output, other...)
 
 		// Print the output and exit
@@ -74,7 +74,7 @@ func main() {
 		newTest(false, `USB controller`)
 	} else if len(*iommu_group) > 0 {
 		// Get all devices in specified IOMMU groups and append it to the output
-		output := iommu.GetDevicesFromGroups(*iommu_group)
+		output := iommu.GetDevicesFromGroups(*iommu_group, *kernelmodules)
 
 		// Print the output and exit
 		printoutput(output)

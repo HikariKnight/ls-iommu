@@ -85,12 +85,17 @@ func GetAllDevices(kernelmodules ...bool) []string {
 	iommu := NewIOMMU()
 	var lspci_devs []string
 
+	// If kernelmodules flag was not passed, set it to false
+	if len(kernelmodules) == 0 {
+		kernelmodules = append(kernelmodules, false)
+	}
+
 	// Iterate through the IOMMU groups and get the device info
 	for id := 0; id < len(iommu.Groups); id++ {
 		// Iterate each device
 		for _, device := range iommu.Groups[id].Devices {
 			// Generate the device list with the data we want
-			line := generateDevList(id, device, len(kernelmodules))
+			line := generateDevList(id, device, kernelmodules[0])
 			lspci_devs = append(lspci_devs, line)
 		}
 	}
@@ -104,6 +109,11 @@ func MatchSubclass(searchval string, kernelmodules ...bool) []string {
 	// Get all IOMMU devices
 	alldevs := NewIOMMU()
 
+	// If kernelmodules flag was not passed, set it to false
+	if len(kernelmodules) == 0 {
+		kernelmodules = append(kernelmodules, false)
+	}
+
 	// Iterate through the groups
 	for id := 0; id < len(alldevs.Groups); id++ {
 		// For each device
@@ -111,7 +121,7 @@ func MatchSubclass(searchval string, kernelmodules ...bool) []string {
 			// If the device has a subclass matching what we are looking for
 			if strings.Contains(device.Subclass.Name, searchval) {
 				// Generate the device list with the data we want
-				line := generateDevList(id, device, len(kernelmodules))
+				line := generateDevList(id, device, kernelmodules[0])
 				devs = append(devs, line)
 			}
 		}
@@ -124,6 +134,11 @@ func MatchSubclass(searchval string, kernelmodules ...bool) []string {
 func GetDevicesFromGroups(groups []int, kernelmodules ...bool) []string {
 	// Make an output string slice
 	var output []string
+
+	// If kernelmodules flag was not passed, set it to false
+	if len(kernelmodules) == 0 {
+		kernelmodules = append(kernelmodules, false)
+	}
 
 	// As long as we are asked to get devices from any specific IOMMU groups
 	if len(groups) > 0 {
@@ -139,7 +154,7 @@ func GetDevicesFromGroups(groups []int, kernelmodules ...bool) []string {
 				// For each device in specified IOMMU group
 				for _, device := range alldevs.Groups[group].Devices {
 					// Generate the device list with the data we want
-					line := generateDevList(group, device, len(kernelmodules))
+					line := generateDevList(group, device, kernelmodules[0])
 
 					// Append line to output
 					output = append(output, line)

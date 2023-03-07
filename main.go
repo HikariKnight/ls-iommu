@@ -24,6 +24,11 @@ func main() {
 		Help:     "List all USB controllers.",
 	})
 
+	nic := parser.Flag("n", "network", &argparse.Options{
+		Required: false,
+		Help:     "List all Network controllers.",
+	})
+
 	iommu_group := parser.IntList("i", "group", &argparse.Options{
 		Required: false,
 		Help:     "List everything in the IOMMU groups given. Supply argument multiple times to list additional groups.",
@@ -32,11 +37,7 @@ func main() {
 	kernelmodules := parser.Flag("k", "kernel", &argparse.Options{
 		Required: false,
 		Help:     "Lists kernel modules using the devices and subsystems.",
-	})
-
-	test := parser.Flag("t", "test", &argparse.Options{
-		Required: false,
-		Help:     "function im actively testing, does not do anything you care about (might be broken)",
+		Default:  false,
 	})
 
 	// Parse arguments
@@ -70,8 +71,21 @@ func main() {
 		// Print the output and exit
 		printoutput(output)
 		os.Exit(0)
-	} else if *test {
-		newTest(false, `USB controller`)
+	} else if *nic {
+		// Get all Ethernet controllers
+		output := iommu.MatchSubclass(`Ethernet controller`, *kernelmodules)
+
+		// Get all Wi-Fi controllers
+		wifi := iommu.MatchSubclass(`Network controller`, *kernelmodules)
+		output = append(output, wifi...)
+
+		// Get all devices in specified IOMMU groups and append it to the output
+		other := iommu.GetDevicesFromGroups(*iommu_group, *kernelmodules)
+		output = append(output, other...)
+
+		// Print the output and exit
+		printoutput(output)
+		os.Exit(0)
 	} else if len(*iommu_group) > 0 {
 		// Get all devices in specified IOMMU groups and append it to the output
 		output := iommu.GetDevicesFromGroups(*iommu_group, *kernelmodules)
@@ -119,10 +133,4 @@ func removeDuplicateLines(lines []string) []string {
 		}
 	}
 	return list
-}
-
-func newTest(kernelmodules bool, searchval string) []string {
-	devs := []string{"test", "test", "not test", "tast", "3", "3"}
-
-	return devs
 }

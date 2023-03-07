@@ -45,6 +45,7 @@ func (i *IOMMU) Read() {
 	pci, err := ghw.PCI(ghw.WithDisableWarnings())
 	ErrorCheck(err)
 
+	// Regex to get IOMMU groups and their devices from filepath
 	iommu_regex := regexp.MustCompile(`/sys/kernel/iommu_groups/(.*)/devices/(.*)`)
 	for _, iommu_device := range iommu_devices {
 		matches := iommu_regex.FindStringSubmatch(iommu_device)
@@ -132,6 +133,36 @@ func MatchSubclass(searchval string) []string {
 	}
 
 	return devs
+}
+
+// Function to print everything inside a specific IOMMU group
+func GetDevicesFromGroups(groups []int) []string {
+	// Make an output string slice
+	var output []string
+
+	// As long as we are asked to get devices from any specific IOMMU groups
+	if len(groups) > 0 {
+		// Get all IOMMU devices
+		alldevs := NewIOMMU()
+
+		// For each IOMMU group given we will print the devices in each group
+		for _, group := range groups {
+			// Check if the IOMMU Group exists
+			if _, iommu_num := alldevs.Groups[group]; !iommu_num {
+				ErrorCheck(fmt.Errorf("IOMMU Group %v does not exist", group))
+			} else {
+				// For each device in specified IOMMU group
+				for _, device := range alldevs.Groups[group].Devices {
+					// Generate output line
+					line := GenDeviceLine(group, device)
+
+					// Append line to output
+					output = append(output, line)
+				}
+			}
+		}
+	}
+	return output
 }
 
 // Old deprecated functions marked for removal/rework below this comment

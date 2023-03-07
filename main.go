@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sort"
 
 	iommu "github.com/HikariKnight/ls-iommu/lib"
 	"github.com/akamensky/argparse"
@@ -86,19 +87,33 @@ func main() {
 
 // Function to just print out a string array to STDOUT
 func printoutput(out []string)  {
+	// Remove duplicate lines
 	output := removeDuplicateLines(out)
+	// Sort cleaned output
+	sort.Strings(output)
+
+	// Print output line by line
 	for _, line := range output {
 		fmt.Print(line)
 	}
 }
 
 // Removes duplicate lines from a string slice, useful for cleaning up the output if doing multiple scans
-func removeDuplicateLines(intSlice []string) []string {
+func removeDuplicateLines(lines []string) []string {
+	// Make a map to keep track of which strings have been processed
     keys := make(map[string]bool)
-    list := []string{}	
-    for _, entry := range intSlice {
+
+	// Make a new string slice
+    var list []string
+
+	// For each line
+    for _, entry := range lines {
+		// If the line has not been processed before
         if _, value := keys[entry]; !value {
+			// Mark it as processed in our map
             keys[entry] = true
+
+			// Add line to our list
             list = append(list, entry)
         }
     }    

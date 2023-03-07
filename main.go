@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	iommu "github.com/HikariKnight/ls-iommu/lib"
 	"github.com/akamensky/argparse"
@@ -48,19 +47,36 @@ func main() {
 
 	// Work with the output depending on arguments given
 	if *gpu {
-		// List all GPUs (3d controllers are ignored)
-		gpus := iommu.MatchSubclass(`VGA`)
-		printoutput(gpus)
-		printIOMMUgroup(*iommu_group)
+		// Get all GPUs (3d controllers are ignored)
+		output := iommu.MatchSubclass(`VGA`)
+
+		// Get all devices in specified IOMMU groups and append it to the output
+		other := iommu.GetDevicesFromGroups(*iommu_group)
+		output = append(output, other...)
+
+		// Print the output and exit
+		printoutput(output)
+		os.Exit(0)
 	} else if *usb {
-		// List all USB controllers
-		usbs := iommu.MatchSubclass(`USB controller`)
-		printoutput(usbs)
-		printIOMMUgroup(*iommu_group)
+		// Get all USB controllers
+		output := iommu.MatchSubclass(`USB controller`)
+
+		// Get all devices in specified IOMMU groups and append it to the output
+		other := iommu.GetDevicesFromGroups(*iommu_group)
+		output = append(output, other...)
+
+		// Print the output and exit
+		printoutput(output)
+		os.Exit(0)
 	} else if *test {
 		newTest(false, `USB controller`)
 	} else if len(*iommu_group) > 0 {
-		printIOMMUgroup(*iommu_group)
+		// Get all devices in specified IOMMU groups and append it to the output
+		output := iommu.GetDevicesFromGroups(*iommu_group)
+
+		// Print the output and exit
+		printoutput(output)
+		os.Exit(0)
 	}  else {
 		// Default behaviour mimicks the bash variant that this is based on
 		out := iommu.GetAllDevices(*kernelmodules)
@@ -70,57 +86,27 @@ func main() {
 
 // Function to just print out a string array to STDOUT
 func printoutput(out []string)  {
-	for _, line := range out {
+	output := removeDuplicateLines(out)
+	for _, line := range output {
 		fmt.Print(line)
 	}
 }
 
-// Function to print everything inside a specific IOMMU group
-func printIOMMUgroup(groups []int) {
-	// As long as we are asked to get devices from any specific IOMMU groups
-	if len(groups) > 0 {
-		// Get all IOMMU devices
-		alldevs := iommu.NewIOMMU()
-
-		// For each IOMMU group given we will print the devices in each group
-		for _, group := range groups {
-			// Check if the IOMMU Group exists
-			if _, iommu_num := alldevs.Groups[group]; !iommu_num {
-				iommu.ErrorCheck(fmt.Errorf("IOMMU Group %v does not exist", group))
-			} else {
-				// For each device in specified IOMMU group
-				for _, device := range alldevs.Groups[group].Devices {
-					// Generate output line
-					line := iommu.GenDeviceLine(group, device)
-
-					// Print the device info
-					fmt.Print(line)
-				}
-			}
-		}
-	}
-	os.Exit(0)
+// Removes duplicate lines from a string slice, useful for cleaning up the output if doing multiple scans
+func removeDuplicateLines(intSlice []string) []string {
+    keys := make(map[string]bool)
+    list := []string{}	
+    for _, entry := range intSlice {
+        if _, value := keys[entry]; !value {
+            keys[entry] = true
+            list = append(list, entry)
+        }
+    }    
+    return list
 }
 
 func newTest(kernelmodules bool, searchval string) []string{
-	var devs []string
-
-	// Get all IOMMU devices
-	alldevs := iommu.NewIOMMU()
-
-	// Iterate through the groups
-	for _, group := range alldevs.Groups {
-		// For each device
-		for _, device := range group.Devices {
-			// If the device has a subclass matching what we are looking for
-			if strings.Contains(device.Subclass.Name,searchval) {
-				// Generate the device line
-				line := iommu.GenDeviceLine(group.ID, device)
-				// Append device line
-				devs = append(devs, line)
-			}
-		}
-	}
+	devs := []string{"test", "test", "not test", "tast", "3", "3"}
 
 	return devs
 }

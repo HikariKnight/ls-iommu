@@ -8,6 +8,7 @@ import (
 	iommu "github.com/HikariKnight/ls-iommu/lib"
 	"github.com/akamensky/argparse"
 )
+
 func main() {
 	// Setup the parser for arguments
 	parser := argparse.NewParser("ls-iommu", "A Tool to print out all devices and their IOMMU groups")
@@ -15,27 +16,27 @@ func main() {
 	// Configure arguments
 	gpu := parser.Flag("g", "gpu", &argparse.Options{
 		Required: false,
-		Help: "List all GPUs and devices related to them.",
+		Help:     "List all GPUs and devices related to them.",
 	})
 
 	usb := parser.Flag("u", "usb", &argparse.Options{
 		Required: false,
-		Help: "List all USB controllers.",
+		Help:     "List all USB controllers.",
 	})
 
-	iommu_group := parser.IntList("i","group", &argparse.Options{
+	iommu_group := parser.IntList("i", "group", &argparse.Options{
 		Required: false,
-		Help: "List everything in the IOMMU groups given. Supply argument multiple times to list additional groups.",
+		Help:     "List everything in the IOMMU groups given. Supply argument multiple times to list additional groups.",
 	})
 
-	kernelmodules := parser.Flag("k","kernel", &argparse.Options{
+	kernelmodules := parser.Flag("k", "kernel", &argparse.Options{
 		Required: false,
-		Help: "Lists kernel modules using the devices and subsystems. (ignored if other options are present)",
+		Help:     "Lists kernel modules using the devices and subsystems. (ignored if other options are present)",
 	})
 
 	test := parser.Flag("t", "test", &argparse.Options{
 		Required: false,
-		Help: "function im actively testing, does not do anything you care about (might be broken)",
+		Help:     "function im actively testing, does not do anything you care about (might be broken)",
 	})
 
 	// Parse arguments
@@ -78,7 +79,7 @@ func main() {
 		// Print the output and exit
 		printoutput(output)
 		os.Exit(0)
-	}  else {
+	} else {
 		// Default behaviour mimicks the bash variant that this is based on
 		out := iommu.GetAllDevices(*kernelmodules)
 		printoutput(out)
@@ -86,7 +87,7 @@ func main() {
 }
 
 // Function to just print out a string array to STDOUT
-func printoutput(out []string)  {
+func printoutput(out []string) {
 	// Remove duplicate lines
 	output := removeDuplicateLines(out)
 	// Sort cleaned output
@@ -101,26 +102,26 @@ func printoutput(out []string)  {
 // Removes duplicate lines from a string slice, useful for cleaning up the output if doing multiple scans
 func removeDuplicateLines(lines []string) []string {
 	// Make a map to keep track of which strings have been processed
-    keys := make(map[string]bool)
+	keys := make(map[string]bool)
 
 	// Make a new string slice
-    var list []string
+	var list []string
 
 	// For each line
-    for _, entry := range lines {
+	for _, entry := range lines {
 		// If the line has not been processed before
-        if _, value := keys[entry]; !value {
+		if _, value := keys[entry]; !value {
 			// Mark it as processed in our map
-            keys[entry] = true
+			keys[entry] = true
 
 			// Add line to our list
-            list = append(list, entry)
-        }
-    }    
-    return list
+			list = append(list, entry)
+		}
+	}
+	return list
 }
 
-func newTest(kernelmodules bool, searchval string) []string{
+func newTest(kernelmodules bool, searchval string) []string {
 	devs := []string{"test", "test", "not test", "tast", "3", "3"}
 
 	return devs

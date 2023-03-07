@@ -16,7 +16,7 @@ func main() {
 	// Configure arguments
 	gpu := parser.Flag("g", "gpu", &argparse.Options{
 		Required: false,
-		Help:     "List all GPUs and devices related to them.",
+		Help:     "List all GPUs.",
 	})
 
 	usb := parser.Flag("u", "usb", &argparse.Options{
@@ -31,7 +31,7 @@ func main() {
 
 	kernelmodules := parser.Flag("k", "kernel", &argparse.Options{
 		Required: false,
-		Help:     "Lists kernel modules using the devices and subsystems. (ignored if other options are present)",
+		Help:     "Lists kernel modules using the devices and subsystems.",
 	})
 
 	test := parser.Flag("t", "test", &argparse.Options{
@@ -50,7 +50,7 @@ func main() {
 	// Work with the output depending on arguments given
 	if *gpu {
 		// Get all GPUs (3d controllers are ignored)
-		output := iommu.MatchSubclass(`VGA`)
+		output := iommu.MatchSubclass(`VGA`, *kernelmodules)
 
 		// Get all devices in specified IOMMU groups and append it to the output
 		other := iommu.GetDevicesFromGroups(*iommu_group)
@@ -61,7 +61,7 @@ func main() {
 		os.Exit(0)
 	} else if *usb {
 		// Get all USB controllers
-		output := iommu.MatchSubclass(`USB controller`)
+		output := iommu.MatchSubclass(`USB controller`, *kernelmodules)
 
 		// Get all devices in specified IOMMU groups and append it to the output
 		other := iommu.GetDevicesFromGroups(*iommu_group)

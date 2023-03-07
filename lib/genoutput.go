@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/pci"
 )
 
@@ -47,6 +48,74 @@ func GenDeviceLine(group int, device *pci.Device, legacyoutput ...bool) string {
 			device.Vendor.ID,
 			device.Product.ID,
 		)
+	}
+
+	return line
+}
+
+func GenKernelInfo(group int, device *pci.Device) string {
+	var line string
+	var subsystem_name string
+	var subvendor_name string
+
+	// We need to probe some extra info here so we need to use ghw
+	pci, err := ghw.PCI()
+	if err != nil {
+		fmt.Printf("Error getting PCI info: %v", err)
+	}
+
+	// Get the subvendor
+	subvendor := pci.Vendors[device.Subsystem.VendorID]
+
+	// If subvendor does exist
+	if subvendor != nil {
+		// Get the subvendor name
+		subvendor_name = pci.Vendors[device.Subsystem.VendorID].Name
+	} else {
+		// Else slap the vendor name on
+		subvendor_name = device.Vendor.Name
+	}
+
+	// If the subsystem name is unknown then use the product name instead
+	if device.Subsystem.Name == "unknown" {
+		subsystem_name = device.Product.Name
+	} else {
+		subsystem_name = device.Subsystem.Name
+	}
+
+	if device.Driver == "" {
+		line = fmt.Sprintf("\tSubsystem: %s %s [%s:%s]\n",
+			subvendor_name,
+			subsystem_name,
+			device.Subsystem.VendorID,
+			device.Subsystem.ID,
+		)
+	} else {
+		line = fmt.Sprintf("\tSubsystem: %s %s [%s:%s]\n\tKernel driver in use: %s\n",
+			subvendor_name,
+			subsystem_name,
+			device.Subsystem.VendorID,
+			device.Subsystem.ID,
+			device.Driver,
+		)
+	}
+
+	return line
+}
+
+func generateDevList(id int, device *pci.Device, kernelmodules ...int) string {
+	var line string
+
+	// If user requested kernel modules
+	if len(kernelmodules) > 0 {
+		// Generate the line with kernel modules
+		line = fmt.Sprintf(
+			"%s%s",
+			GenDeviceLine(id, device),
+			GenKernelInfo(id, device),
+		)
+	} else {
+		line = GenDeviceLine(id, device)
 	}
 
 	return line

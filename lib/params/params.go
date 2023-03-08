@@ -1,5 +1,13 @@
 package params
 
+/*
+	The whole purpose of this module is to make a struct
+	to just carry all our parsed arguments around between functions
+
+	Create a Params struct with
+	pArg := params.NewParams()
+*/
+
 type Params struct {
 	Flag        map[string]bool
 	FlagCounter map[string]int
@@ -17,11 +25,6 @@ func (p *Params) AddFlagCounter(name string, flag int) {
 func (p *Params) AddIntList(name string, flag []int) {
 	p.IntList[name] = flag
 }
-
-/*
-Create a Params struct with
-	pArg := params.NewParams()
-*/
 
 func NewParams() *Params {
 	p := &Params{

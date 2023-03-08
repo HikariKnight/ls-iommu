@@ -110,7 +110,7 @@ func main() {
 // Function to just print out a string array to STDOUT
 func printoutput(out []string) {
 	if len(out) == 0 {
-		log.Fatal("IOMMU disabled in UEFI/BIOS and/or you have not configured your\n\t\t    bootloader to enable iommu with the kernel boot arguments!")
+		log.Fatal("IOMMU disabled in UEFI/BIOS and/or you have not configured your\n\t\t    bootloader to enable IOMMU with the kernel boot arguments!")
 	}
 
 	// Remove duplicate lines

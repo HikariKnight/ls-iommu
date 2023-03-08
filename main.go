@@ -32,7 +32,7 @@ func main() {
 
 	related := parser.FlagCounter("r", "related", &argparse.Options{
 		Required: false,
-		Help:     "Attempt to list related devices that share Vendor ID or\n\t\t IOMMU Groups (used with -g -u and -n), pass -rr if you want to search using both when used with -g or -n\n\t\t Note: -rr can be inaccurate or too broad when many devices share Vendor ID",
+		Help:     "Attempt to list related devices that share Vendor ID or\n\t\t IOMMU Groups (used with -g -u -i and -n), pass -rr if you want to search using both when used with -g -i or -n\n\t\t Note: -rr can be inaccurate or too broad when many devices share Vendor ID",
 	})
 
 	iommu_group := parser.IntList("i", "group", &argparse.Options{
@@ -61,7 +61,7 @@ func main() {
 		output := iommu.MatchSubclass(`VGA`, *related, *kernelmodules)
 
 		// Get all devices in specified IOMMU groups and append it to the output
-		other := iommu.GetDevicesFromGroups(*iommu_group, *kernelmodules)
+		other := iommu.GetDevicesFromGroups(*iommu_group, *related, *kernelmodules)
 		output = append(output, other...)
 
 		// Print the output and exit
@@ -72,7 +72,7 @@ func main() {
 		output := iommu.MatchSubclass(`USB controller`, *related, *kernelmodules)
 
 		// Get all devices in specified IOMMU groups and append it to the output
-		other := iommu.GetDevicesFromGroups(*iommu_group, *kernelmodules)
+		other := iommu.GetDevicesFromGroups(*iommu_group, *related, *kernelmodules)
 		output = append(output, other...)
 
 		// Print the output and exit
@@ -87,7 +87,7 @@ func main() {
 		output = append(output, wifi...)
 
 		// Get all devices in specified IOMMU groups and append it to the output
-		other := iommu.GetDevicesFromGroups(*iommu_group, *kernelmodules)
+		other := iommu.GetDevicesFromGroups(*iommu_group, *related, *kernelmodules)
 		output = append(output, other...)
 
 		// Print the output and exit
@@ -95,7 +95,7 @@ func main() {
 		os.Exit(0)
 	} else if len(*iommu_group) > 0 {
 		// Get all devices in specified IOMMU groups and append it to the output
-		output := iommu.GetDevicesFromGroups(*iommu_group, *kernelmodules)
+		output := iommu.GetDevicesFromGroups(*iommu_group, *related, *kernelmodules)
 
 		// Print the output and exit
 		printoutput(output)

@@ -127,10 +127,11 @@ func MatchSubclass(searchval string, related int, kernelmodules ...bool) []strin
 				// If we want to search for related devices
 				if related > 0 && searchval != `USB controller` {
 					// Find relatives and add them to the list
-					relatives_list := findRelatedDevices(device.Vendor.ID, related, kernelmodules[0])
-					devs = append(devs, relatives_list...)
+					related_list := findRelatedDevices(device.Vendor.ID, related, kernelmodules[0])
+					devs = append(devs, related_list...)
 				} else if related > 0 && searchval == `USB controller` {
-					other := GetDevicesFromGroups([]int{id},kernelmodules[0])
+					// Prevent an infinite loop by passing 0 instead of related
+					other := GetDevicesFromGroups([]int{id}, 0, kernelmodules[0])
 					devs = append(devs, other...)
 				}
 			}
@@ -141,7 +142,7 @@ func MatchSubclass(searchval string, related int, kernelmodules ...bool) []strin
 }
 
 // Function to print everything inside a specific IOMMU group
-func GetDevicesFromGroups(groups []int, kernelmodules ...bool) []string {
+func GetDevicesFromGroups(groups []int, related int, kernelmodules ...bool) []string {
 	// Make an output string slice
 	var output []string
 
@@ -168,6 +169,12 @@ func GetDevicesFromGroups(groups []int, kernelmodules ...bool) []string {
 
 					// Append line to output
 					output = append(output, line)
+
+					if related > 0 {
+						// Find relatives and add them to the list
+						related_list := findRelatedDevices(device.Vendor.ID, related, kernelmodules[0])
+						output = append(output, related_list...)
+					}
 				}
 			}
 		}
@@ -190,9 +197,11 @@ func findRelatedDevices(vendorid string, related int, kernelmodules bool) []stri
 				// Generate the device list with the data we want
 				line := generateDevList(id, device, kernelmodules)
 				devs = append(devs, line)
+				fmt.Println(device.Product.Name)
 
-				if related > 2 {
-					other := GetDevicesFromGroups([]int{id},kernelmodules)
+				if related > 1 {
+					// Prevent an infinite loop by passing 0 instead of related variable
+					other := GetDevicesFromGroups([]int{id}, 0, kernelmodules)
 					devs = append(devs, other...)
 				}
 			}

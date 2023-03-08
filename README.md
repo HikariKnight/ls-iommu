@@ -12,7 +12,7 @@ More extended functionality is planned.
 ![screenshot](https://user-images.githubusercontent.com/2557889/223729837-66461127-997c-4ce4-9183-9d2b85219a07.png)
 
 ## Features
-* Default output (no args) is text compatible with the bash version of ls-iommu
+* Has a flag to generate default ouptut text compatible with the bash version of ls-iommu (--legacy)
 * Can locate and display only GPUs, USB Controllers and Network cards
 * List devices of individual or multiple IOMMU groups
 * Can show you kernel driver info for the devices

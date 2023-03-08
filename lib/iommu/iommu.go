@@ -16,6 +16,7 @@ type IOMMU struct {
 	Groups map[int]*Group
 }
 
+// Adds a Group struct to the IOMMU struct
 func (i *IOMMU) AddGroup(group *Group) {
 	i.Groups[group.ID] = group
 }
@@ -25,10 +26,12 @@ type Group struct {
 	Devices map[string]*ghwpci.Device
 }
 
+// Adds a new pci device to the Group struct
 func (g *Group) AddDevice(device *ghwpci.Device) {
 	g.Devices[(*device).Address] = device
 }
 
+// Creates a new Group struct
 func NewGroup(id int, devices map[string]*ghwpci.Device) *Group {
 	return &Group{
 		ID:      id,
@@ -55,12 +58,17 @@ func (i *IOMMU) Read() {
 		}
 		device_id := matches[2]
 
+		// Regex to check for a valid PCI domain to avoid a
+		// ghw bug with Intel VMA which uses the PCI domain 10000, which ghw cannot handle
 		r := regexp.MustCompile(`^([a-z0-9]{1,4}):`)
 
+		// Only match valid PCI domains (start with 4 hexadecimal characters followed by a :)
 		if r.MatchString(device_id) {
 			device := pci.GetDevice(device_id)
 			// If the group doesn't exist in the struct, add it
 			_, exists := i.Groups[group_id]
+
+			// If the group does not exist in our struct
 			if !exists {
 				/*
 					grp := &Group{
@@ -77,20 +85,30 @@ func (i *IOMMU) Read() {
 				// Add the group to the IOMMU struct
 				i.AddGroup(grp)
 			} else {
+				// Add the device to the existing group ID
 				i.Groups[group_id].AddDevice(device)
 			}
 		}
 	}
 }
 
+// Creates an IOMMU struct-
 func NewIOMMU() *IOMMU {
+	// Make an empty IOMMU struct
 	iommu := &IOMMU{}
+
+	// Get all the IOMMU data
 	iommu.Read()
+
+	// Return the struct with the data
 	return iommu
 }
 
 func GetAllDevices(pArg *params.Params) []string {
+	// Get all the IOMMU data and put it into a variable
 	iommu := NewIOMMU()
+
+	// Prepare a string slice for storing our output
 	var lspci_devs []string
 
 	// Iterate through the IOMMU groups and get the device info
@@ -127,6 +145,7 @@ func MatchSubclass(searchval string, pArg *params.Params) []string {
 					// Find relatives and add them to the list
 					related_list := findRelatedDevices(device.Vendor.ID, pArg.FlagCounter["related"], pArg)
 					devs = append(devs, related_list...)
+
 				} else if pArg.FlagCounter["related"] > 0 && searchval == `USB controller` {
 					// Prevent an infinite loop by passing 0 instead of related
 					other := GetDevicesFromGroups([]int{id}, 0, pArg)
@@ -175,7 +194,9 @@ func GetDevicesFromGroups(groups []int, related int, pArg *params.Params) []stri
 	return output
 }
 
+// Find related devices based on VendorID, and do a deeper search in the same IOMMU group if specified
 func findRelatedDevices(vendorid string, related int, pArg *params.Params) []string {
+	// Make a string slice for our output
 	var devs []string
 
 	// Get all IOMMU devices

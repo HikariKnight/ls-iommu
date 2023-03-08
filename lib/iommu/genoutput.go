@@ -8,6 +8,7 @@ import (
 	"github.com/jaypipes/ghw/pkg/pci"
 )
 
+// Generates a line with the Device info and formats it properly to be similar to the bash version of ls-iommu
 func GenDeviceLine(group int, device *pci.Device, pArg *params.Params) string {
 	var line string
 
@@ -52,6 +53,7 @@ func GenDeviceLine(group int, device *pci.Device, pArg *params.Params) string {
 	return line
 }
 
+// Generates the kernel driver info for a device
 func GenKernelInfo(group int, device *pci.Device) string {
 	var line string
 	var subsystem_name string
@@ -109,6 +111,7 @@ func GenKernelInfo(group int, device *pci.Device) string {
 	return line
 }
 
+// Generates a line for our device list
 func generateDevList(id int, device *pci.Device, pArg *params.Params) string {
 	var line string
 
@@ -121,6 +124,7 @@ func generateDevList(id int, device *pci.Device, pArg *params.Params) string {
 			GenKernelInfo(id, device),
 		)
 	} else {
+		// Generate the line without the kernel modules
 		line = GenDeviceLine(id, device, pArg)
 	}
 

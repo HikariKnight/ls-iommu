@@ -3,16 +3,17 @@ package iommu
 import (
 	"fmt"
 
+	"github.com/HikariKnight/ls-iommu/lib/params"
 	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/pci"
 )
 
-func GenDeviceLine(group int, device *pci.Device, legacyoutput ...bool) string {
+func GenDeviceLine(group int, device *pci.Device, pArg *params.Params) string {
 	var line string
 
 	// If we want legacy output (to be output compatible with the bash version)
 	var iommu_group string
-	if legacyoutput[0] {
+	if pArg.Flag["legacyoutput"] {
 		// Do not pad the group number
 		iommu_group = fmt.Sprintf("%d", group)
 	} else {
@@ -108,24 +109,19 @@ func GenKernelInfo(group int, device *pci.Device) string {
 	return line
 }
 
-func generateDevList(id int, device *pci.Device, legacyoutput bool, kernelmodules ...bool) string {
+func generateDevList(id int, device *pci.Device, pArg *params.Params) string {
 	var line string
 
-	// If kernelmodules flag was not passed, set it to false
-	if len(kernelmodules) == 0 {
-		kernelmodules = append(kernelmodules, false)
-	}
-
 	// If user requested kernel modules
-	if kernelmodules[0] {
+	if pArg.Flag["kernelmodules"] {
 		// Generate the line with kernel modules
 		line = fmt.Sprintf(
 			"%s%s",
-			GenDeviceLine(id, device, legacyoutput),
+			GenDeviceLine(id, device, pArg),
 			GenKernelInfo(id, device),
 		)
 	} else {
-		line = GenDeviceLine(id, device, legacyoutput)
+		line = GenDeviceLine(id, device, pArg)
 	}
 
 	return line

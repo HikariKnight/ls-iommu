@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/HikariKnight/ls-iommu/lib/params"
 	"github.com/jaypipes/ghw"
 	ghwpci "github.com/jaypipes/ghw/pkg/pci"
 )
@@ -58,15 +59,22 @@ func (i *IOMMU) Read() {
 
 		if r.MatchString(device_id) {
 			device := pci.GetDevice(device_id)
-
 			// If the group doesn't exist in the struct, add it
 			_, exists := i.Groups[group_id]
 			if !exists {
-				grp := &Group{
-					ID:      group_id,
-					Devices: make(map[string]*ghwpci.Device),
-				}
+				/*
+					grp := &Group{
+						ID:      group_id,
+						Devices: make(map[string]*ghwpci.Device),
+					}
+				*/
+				// Make a new Group struct, this is equal to the code above for reference
+				grp := NewGroup(group_id, make(map[string]*ghwpci.Device))
+
+				// Add the device to the group
 				grp.AddDevice(device)
+
+				// Add the group to the IOMMU struct
 				i.AddGroup(grp)
 			} else {
 				i.Groups[group_id].AddDevice(device)
@@ -81,21 +89,16 @@ func NewIOMMU() *IOMMU {
 	return iommu
 }
 
-func GetAllDevices(legacyoutput bool, kernelmodules ...bool) []string {
+func GetAllDevices(pArg *params.Params) []string {
 	iommu := NewIOMMU()
 	var lspci_devs []string
-
-	// If kernelmodules flag was not passed, set it to false
-	if len(kernelmodules) == 0 {
-		kernelmodules = append(kernelmodules, false)
-	}
 
 	// Iterate through the IOMMU groups and get the device info
 	for id := 0; id < len(iommu.Groups); id++ {
 		// Iterate each device
 		for _, device := range iommu.Groups[id].Devices {
 			// Generate the device list with the data we want
-			line := generateDevList(id, device, legacyoutput, kernelmodules[0])
+			line := generateDevList(id, device, pArg)
 			lspci_devs = append(lspci_devs, line)
 		}
 	}
@@ -103,16 +106,11 @@ func GetAllDevices(legacyoutput bool, kernelmodules ...bool) []string {
 	return lspci_devs
 }
 
-func MatchSubclass(searchval string, related int, kernelmodules ...bool) []string {
+func MatchSubclass(searchval string, pArg *params.Params) []string {
 	var devs []string
 
 	// Get all IOMMU devices
 	alldevs := NewIOMMU()
-
-	// If kernelmodules flag was not passed, set it to false
-	if len(kernelmodules) == 0 {
-		kernelmodules = append(kernelmodules, false)
-	}
 
 	// Iterate through the groups
 	for id := 0; id < len(alldevs.Groups); id++ {
@@ -121,17 +119,17 @@ func MatchSubclass(searchval string, related int, kernelmodules ...bool) []strin
 			// If the device has a subclass matching what we are looking for
 			if strings.Contains(device.Subclass.Name, searchval) {
 				// Generate the device list with the data we want
-				line := generateDevList(id, device, kernelmodules[0])
+				line := generateDevList(id, device, pArg)
 				devs = append(devs, line)
 
 				// If we want to search for related devices
-				if related > 0 && searchval != `USB controller` {
+				if pArg.FlagCounter["related"] > 0 && searchval != `USB controller` {
 					// Find relatives and add them to the list
-					related_list := findRelatedDevices(device.Vendor.ID, related, kernelmodules[0])
+					related_list := findRelatedDevices(device.Vendor.ID, pArg.FlagCounter["related"], pArg)
 					devs = append(devs, related_list...)
-				} else if related > 0 && searchval == `USB controller` {
+				} else if pArg.FlagCounter["related"] > 0 && searchval == `USB controller` {
 					// Prevent an infinite loop by passing 0 instead of related
-					other := GetDevicesFromGroups([]int{id}, 0, kernelmodules[0])
+					other := GetDevicesFromGroups([]int{id}, 0, pArg)
 					devs = append(devs, other...)
 				}
 			}
@@ -142,14 +140,9 @@ func MatchSubclass(searchval string, related int, kernelmodules ...bool) []strin
 }
 
 // Function to print everything inside a specific IOMMU group
-func GetDevicesFromGroups(groups []int, related int, kernelmodules ...bool) []string {
+func GetDevicesFromGroups(groups []int, related int, pArg *params.Params) []string {
 	// Make an output string slice
 	var output []string
-
-	// If kernelmodules flag was not passed, set it to false
-	if len(kernelmodules) == 0 {
-		kernelmodules = append(kernelmodules, false)
-	}
 
 	// As long as we are asked to get devices from any specific IOMMU groups
 	if len(groups) > 0 {
@@ -165,14 +158,14 @@ func GetDevicesFromGroups(groups []int, related int, kernelmodules ...bool) []st
 				// For each device in specified IOMMU group
 				for _, device := range alldevs.Groups[group].Devices {
 					// Generate the device list with the data we want
-					line := generateDevList(group, device, kernelmodules[0])
+					line := generateDevList(group, device, pArg)
 
 					// Append line to output
 					output = append(output, line)
 
 					if related > 0 {
 						// Find relatives and add them to the list
-						related_list := findRelatedDevices(device.Vendor.ID, related, kernelmodules[0])
+						related_list := findRelatedDevices(device.Vendor.ID, pArg.FlagCounter["related"], pArg)
 						output = append(output, related_list...)
 					}
 				}
@@ -182,7 +175,7 @@ func GetDevicesFromGroups(groups []int, related int, kernelmodules ...bool) []st
 	return output
 }
 
-func findRelatedDevices(vendorid string, related int, kernelmodules bool) []string {
+func findRelatedDevices(vendorid string, related int, pArg *params.Params) []string {
 	var devs []string
 
 	// Get all IOMMU devices
@@ -195,12 +188,12 @@ func findRelatedDevices(vendorid string, related int, kernelmodules bool) []stri
 			// If the device has a vendor ID matching what we are looking for
 			if strings.Contains(device.Vendor.ID, vendorid) {
 				// Generate the device list with the data we want
-				line := generateDevList(id, device, kernelmodules)
+				line := generateDevList(id, device, pArg)
 				devs = append(devs, line)
 
 				if related > 1 {
 					// Prevent an infinite loop by passing 0 instead of related variable
-					other := GetDevicesFromGroups([]int{id}, 0, kernelmodules)
+					other := GetDevicesFromGroups([]int{id}, 0, pArg)
 					devs = append(devs, other...)
 				}
 			}
@@ -212,10 +205,10 @@ func findRelatedDevices(vendorid string, related int, kernelmodules bool) []stri
 
 // Old deprecated functions marked for removal/rework below this comment
 
-func MatchDEVs(kernelmodules bool, regex string) []string {
+func MatchDEVs(regex string, pArg *params.Params) []string {
 	var devs []string
 
-	output := GetAllDevices(false, kernelmodules)
+	output := GetAllDevices(pArg)
 	gpuReg, err := regexp.Compile(regex)
 	ErrorCheck(err)
 

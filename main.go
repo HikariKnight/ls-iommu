@@ -6,13 +6,17 @@ import (
 	"os"
 	"sort"
 
-	iommu "github.com/HikariKnight/ls-iommu/lib"
+	iommu "github.com/HikariKnight/ls-iommu/lib/iommu"
+	params "github.com/HikariKnight/ls-iommu/lib/params"
 	"github.com/akamensky/argparse"
 )
 
 func main() {
 	// Setup the parser for arguments
 	parser := argparse.NewParser("ls-iommu", "A Tool to print out all devices and their IOMMU groups")
+
+	// Add all flags into 1 struct for easy portability later
+	pArg := params.NewParams()
 
 	// Configure arguments
 	gpu := parser.Flag("g", "gpu", &argparse.Options{
@@ -61,54 +65,63 @@ func main() {
 		os.Exit(4)
 	}
 
+	// Add all parsed arguments to a struct for portability since we will use them all over the program
+	pArg.AddFlag("gpu", *gpu)
+	pArg.AddFlag("usb", *usb)
+	pArg.AddFlag("nic", *nic)
+	pArg.AddFlagCounter("related", *related)
+	pArg.AddIntList("iommu_group", *iommu_group)
+	pArg.AddFlag("kernelmodules", *kernelmodules)
+	pArg.AddFlag("legacyoutput", *legacyoutput)
+
 	// Work with the output depending on arguments given
-	if *gpu {
+	if pArg.Flag["gpu"] {
 		// Get all GPUs (3d controllers are ignored)
-		output := iommu.MatchSubclass(`VGA`, *related, *kernelmodules)
+		output := iommu.MatchSubclass(`VGA`, pArg)
 
 		// Get all devices in specified IOMMU groups and append it to the output
-		other := iommu.GetDevicesFromGroups(*iommu_group, *related, *kernelmodules)
+		other := iommu.GetDevicesFromGroups(*iommu_group, pArg.FlagCounter["related"], pArg)
 		output = append(output, other...)
 
 		// Print the output and exit
 		printoutput(output)
 		os.Exit(0)
-	} else if *usb {
+	} else if pArg.Flag["usb"] {
 		// Get all USB controllers
-		output := iommu.MatchSubclass(`USB controller`, *related, *kernelmodules)
+		output := iommu.MatchSubclass(`USB controller`, pArg)
 
 		// Get all devices in specified IOMMU groups and append it to the output
-		other := iommu.GetDevicesFromGroups(*iommu_group, *related, *kernelmodules)
+		other := iommu.GetDevicesFromGroups(*iommu_group, pArg.FlagCounter["related"], pArg)
 		output = append(output, other...)
 
 		// Print the output and exit
 		printoutput(output)
 		os.Exit(0)
-	} else if *nic {
+	} else if pArg.Flag["nic"] {
 		// Get all Ethernet controllers
-		output := iommu.MatchSubclass(`Ethernet controller`, *related, *kernelmodules)
+		output := iommu.MatchSubclass(`Ethernet controller`, pArg)
 
 		// Get all Wi-Fi controllers
-		wifi := iommu.MatchSubclass(`Network controller`, *related, *kernelmodules)
+		wifi := iommu.MatchSubclass(`Network controller`, pArg)
 		output = append(output, wifi...)
 
 		// Get all devices in specified IOMMU groups and append it to the output
-		other := iommu.GetDevicesFromGroups(*iommu_group, *related, *kernelmodules)
+		other := iommu.GetDevicesFromGroups(*iommu_group, pArg.FlagCounter["related"], pArg)
 		output = append(output, other...)
 
 		// Print the output and exit
 		printoutput(output)
 		os.Exit(0)
-	} else if len(*iommu_group) > 0 {
+	} else if len(pArg.IntList["iommu_group"]) > 0 {
 		// Get all devices in specified IOMMU groups and append it to the output
-		output := iommu.GetDevicesFromGroups(*iommu_group, *related, *kernelmodules)
+		output := iommu.GetDevicesFromGroups(*iommu_group, pArg.FlagCounter["related"], pArg)
 
 		// Print the output and exit
 		printoutput(output)
 		os.Exit(0)
 	} else {
 		// Default behaviour mimicks the bash variant that this is based on
-		out := iommu.GetAllDevices(*legacyoutput, *kernelmodules)
+		out := iommu.GetAllDevices(pArg)
 		printoutput(out)
 	}
 }

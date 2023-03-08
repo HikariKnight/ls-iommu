@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"sort"
 
@@ -108,6 +109,10 @@ func main() {
 
 // Function to just print out a string array to STDOUT
 func printoutput(out []string) {
+	if len(out) == 0 {
+		log.Fatal("IOMMU disabled in UEFI/BIOS or you have not configured your bootloader to enable iommu with the kernel boot arguments!")
+	}
+
 	// Remove duplicate lines
 	output := removeDuplicateLines(out)
 	// Sort cleaned output

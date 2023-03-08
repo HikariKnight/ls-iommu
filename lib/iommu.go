@@ -197,7 +197,6 @@ func findRelatedDevices(vendorid string, related int, kernelmodules bool) []stri
 				// Generate the device list with the data we want
 				line := generateDevList(id, device, kernelmodules)
 				devs = append(devs, line)
-				fmt.Println(device.Product.Name)
 
 				if related > 1 {
 					// Prevent an infinite loop by passing 0 instead of related variable

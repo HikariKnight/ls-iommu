@@ -2,7 +2,6 @@ package iommu
 
 import (
 	"fmt"
-	"regexp"
 
 	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/pci"
@@ -10,7 +9,6 @@ import (
 
 func GenDeviceLine(group int, device *pci.Device, legacyoutput ...bool) string {
 	var line string
-	pciaddrclean := regexp.MustCompile(`^\d+:`)
 
 	// If we want legacy output (to be output compatible with the bash version)
 	var iommu_group string
@@ -26,7 +24,7 @@ func GenDeviceLine(group int, device *pci.Device, legacyoutput ...bool) string {
 	if device.Revision != "0x00" {
 		line = fmt.Sprintf("IOMMU Group %s: %s %s [%s%s]: %s %s [%s:%s] (rev %s)\n",
 			iommu_group,
-			pciaddrclean.ReplaceAllString(device.Address, ""),
+			device.Address,
 			device.Subclass.Name,
 			device.Class.ID,
 			device.Subclass.ID,
@@ -39,7 +37,7 @@ func GenDeviceLine(group int, device *pci.Device, legacyoutput ...bool) string {
 	} else {
 		line = fmt.Sprintf("IOMMU Group %s: %s %s [%s%s]: %s %s [%s:%s]\n",
 			iommu_group,
-			pciaddrclean.ReplaceAllString(device.Address, ""),
+			device.Address,
 			device.Subclass.Name,
 			device.Class.ID,
 			device.Subclass.ID,
@@ -83,19 +81,26 @@ func GenKernelInfo(group int, device *pci.Device) string {
 		subsystem_name = device.Subsystem.Name
 	}
 
-	if device.Driver == "" {
-		line = fmt.Sprintf("\tSubsystem: %s %s [%s:%s]\n",
+	// Add the subSystemID to a string so we can check if its valid
+	subSystemID := fmt.Sprintf("%s:%s", device.Subsystem.VendorID, device.Subsystem.ID)
+
+	// If we have a valid (not just 0s) ID
+	if subSystemID != "0000:0000" {
+		// Add the Subsystem data
+		line = fmt.Sprintf(
+			"\tSubsystem: %s %s [%s:%s]\n",
 			subvendor_name,
 			subsystem_name,
 			device.Subsystem.VendorID,
 			device.Subsystem.ID,
 		)
-	} else {
-		line = fmt.Sprintf("\tSubsystem: %s %s [%s:%s]\n\tKernel driver in use: %s\n",
-			subvendor_name,
-			subsystem_name,
-			device.Subsystem.VendorID,
-			device.Subsystem.ID,
+	}
+
+	// If we do not have an empty driver string
+	if device.Driver != "" {
+		// Add the driver data
+		line = fmt.Sprintf("%s\tKernel driver in use: %s\n",
+			line,
 			device.Driver,
 		)
 	}

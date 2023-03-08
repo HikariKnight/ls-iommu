@@ -12,7 +12,7 @@ func GenDeviceLine(group int, device *pci.Device, legacyoutput ...bool) string {
 
 	// If we want legacy output (to be output compatible with the bash version)
 	var iommu_group string
-	if len(legacyoutput) > 0 {
+	if legacyoutput[0] {
 		// Do not pad the group number
 		iommu_group = fmt.Sprintf("%d", group)
 	} else {
@@ -108,7 +108,7 @@ func GenKernelInfo(group int, device *pci.Device) string {
 	return line
 }
 
-func generateDevList(id int, device *pci.Device, kernelmodules ...bool) string {
+func generateDevList(id int, device *pci.Device, legacyoutput bool, kernelmodules ...bool) string {
 	var line string
 
 	// If kernelmodules flag was not passed, set it to false
@@ -121,11 +121,11 @@ func generateDevList(id int, device *pci.Device, kernelmodules ...bool) string {
 		// Generate the line with kernel modules
 		line = fmt.Sprintf(
 			"%s%s",
-			GenDeviceLine(id, device),
+			GenDeviceLine(id, device, legacyoutput),
 			GenKernelInfo(id, device),
 		)
 	} else {
-		line = GenDeviceLine(id, device)
+		line = GenDeviceLine(id, device, legacyoutput)
 	}
 
 	return line

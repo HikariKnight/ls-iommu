@@ -81,7 +81,7 @@ func NewIOMMU() *IOMMU {
 	return iommu
 }
 
-func GetAllDevices(kernelmodules ...bool) []string {
+func GetAllDevices(legacyoutput bool, kernelmodules ...bool) []string {
 	iommu := NewIOMMU()
 	var lspci_devs []string
 
@@ -95,7 +95,7 @@ func GetAllDevices(kernelmodules ...bool) []string {
 		// Iterate each device
 		for _, device := range iommu.Groups[id].Devices {
 			// Generate the device list with the data we want
-			line := generateDevList(id, device, kernelmodules[0])
+			line := generateDevList(id, device, legacyoutput, kernelmodules[0])
 			lspci_devs = append(lspci_devs, line)
 		}
 	}
@@ -215,7 +215,7 @@ func findRelatedDevices(vendorid string, related int, kernelmodules bool) []stri
 func MatchDEVs(kernelmodules bool, regex string) []string {
 	var devs []string
 
-	output := GetAllDevices(kernelmodules)
+	output := GetAllDevices(false, kernelmodules)
 	gpuReg, err := regexp.Compile(regex)
 	ErrorCheck(err)
 

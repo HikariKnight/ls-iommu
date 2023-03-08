@@ -46,6 +46,12 @@ func main() {
 		Default:  false,
 	})
 
+	legacyoutput := parser.Flag("", "legacy", &argparse.Options{
+		Required: false,
+		Help:     "Only used with no other flags, when used it will generate the output unsorted and be the same output as the old bash script",
+		Default:  false,
+	})
+
 	// Parse arguments
 	err := parser.Parse(os.Args)
 	if err != nil {
@@ -102,7 +108,7 @@ func main() {
 		os.Exit(0)
 	} else {
 		// Default behaviour mimicks the bash variant that this is based on
-		out := iommu.GetAllDevices(*kernelmodules)
+		out := iommu.GetAllDevices(*legacyoutput, *kernelmodules)
 		printoutput(out)
 	}
 }

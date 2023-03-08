@@ -10,3 +10,14 @@ Currently the program supports the same behavior as Wendell's ls-iommu script bu
 More extended functionality is planned.
 
 ![screenshot](https://user-images.githubusercontent.com/2557889/223729837-66461127-997c-4ce4-9183-9d2b85219a07.png)
+
+## Features
+* Default output (no args) is text compatible with the bash version of ls-iommu
+* Can locate and display only GPUs, USB Controllers and Network cards
+* List devices of individual or multiple IOMMU groups
+* Can show you kernel driver info for the devices
+* Can attempt to get related devices (devices that share vendorID) or devices located in the same IOMMU group as the device(s), the best method is used for -r depending on what you look for.
+
+## Features being worked on
+* Flag to list only VendorID:DeviceID for all devices found
+* Flag to list only PCI Address for all devices found

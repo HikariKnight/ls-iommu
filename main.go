@@ -52,7 +52,7 @@ func main() {
 
 	legacyoutput := parser.Flag("", "legacy", &argparse.Options{
 		Required: false,
-		Help:     "Only used with no other flags, when used it will generate the output unsorted and be the same output as the old bash script",
+		Help:     "Generate the output unsorted and be the same output as the old bash script",
 		Default:  false,
 	})
 

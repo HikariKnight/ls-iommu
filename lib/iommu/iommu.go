@@ -219,14 +219,28 @@ func findRelatedDevices(vendorid string, related int, pArg *params.Params) []str
 		for _, device := range alldevs.Groups[id].Devices {
 			// If the device has a vendor ID matching what we are looking for
 			if strings.Contains(device.Vendor.ID, vendorid) {
-				// Generate the device list with the data we want
-				line := generateDevList(id, device, pArg)
-				devs = append(devs, line)
+				// Make a variable to decide if device should be ignored
+				ignoreDevice := false
 
-				if related > 1 {
-					// Prevent an infinite loop by passing 0 instead of related variable
-					other := GetDevicesFromGroups([]int{id}, 0, pArg)
-					devs = append(devs, other...)
+				// Check if we should ignore the device
+				for _, ignore := range pArg.StringList["ignore"] {
+					// If the VendorID is to be ignored
+					if ignore == device.Vendor.ID {
+						// Mark device to be ignored
+						ignoreDevice = true
+					}
+				}
+
+				if !ignoreDevice {
+					// Generate the device list with the data we want
+					line := generateDevList(id, device, pArg)
+					devs = append(devs, line)
+
+					if related > 1 {
+						// Prevent an infinite loop by passing 0 instead of related variable
+						other := GetDevicesFromGroups([]int{id}, 0, pArg)
+						devs = append(devs, other...)
+					}
 				}
 			}
 		}

@@ -19,6 +19,7 @@ type Params struct {
 	Flag        map[string]bool
 	FlagCounter map[string]int
 	IntList     map[string][]int
+	StringList  map[string][]string
 }
 
 func (p *Params) addFlag(name string, flag bool) {
@@ -31,6 +32,10 @@ func (p *Params) addFlagCounter(name string, flag int) {
 
 func (p *Params) addIntList(name string, flag []int) {
 	p.IntList[name] = flag
+}
+
+func (p *Params) addStringList(name string, flag []string) {
+	p.StringList[name] = flag
 }
 
 func NewParams() *Params {
@@ -58,6 +63,11 @@ func NewParams() *Params {
 		Help:     "Attempt to list related devices that share Vendor ID or\n\t\t IOMMU Groups (used with -g -u -i and -n), pass -rr if you want to search using both when used with -g -i or -n\n\t\t Note: -rr can be inaccurate or too broad when many devices share Vendor ID",
 	})
 
+	ignore := parser.StringList("R", "ignore", &argparse.Options{
+		Required: false,
+		Help:     "Ignores passed VendorID (Left part of : in [VendorID:DeviceID]) when doing a --related search, you can use this to ignore unreliable Vendor IDs when doing related searches.",
+	})
+
 	iommu_group := parser.IntList("i", "group", &argparse.Options{
 		Required: false,
 		Help:     "List everything in the IOMMU groups given. Supply argument multiple times to list additional groups.",
@@ -77,14 +87,12 @@ func NewParams() *Params {
 
 	id := parser.Flag("", "id", &argparse.Options{
 		Required: false,
-		Help:     "Print out only VendorID:DeviceID for devices (Only works with -i)",
-		Default:  false,
+		Help:     "Print out only VendorID:DeviceID for non bridge devices (Only works with -i)",
 	})
 
 	pciaddr := parser.Flag("", "pciaddr", &argparse.Options{
 		Required: false,
-		Help:     "Print out only the PCI Address for devices (Only works with -i)",
-		Default:  false,
+		Help:     "Print out only the PCI Address for non bridge devices (Only works with -i)",
 	})
 
 	// Parse arguments
@@ -101,6 +109,7 @@ func NewParams() *Params {
 		Flag:        make(map[string]bool),
 		FlagCounter: make(map[string]int),
 		IntList:     make(map[string][]int),
+		StringList:  make(map[string][]string),
 	}
 
 	// Add all parsed arguments to a struct for portability since we will use them all over the program
@@ -108,6 +117,7 @@ func NewParams() *Params {
 	pArg.addFlag("usb", *usb)
 	pArg.addFlag("nic", *nic)
 	pArg.addFlagCounter("related", *related)
+	pArg.addStringList("ignore", *ignore)
 	pArg.addIntList("iommu_group", *iommu_group)
 	pArg.addFlag("kernelmodules", *kernelmodules)
 	pArg.addFlag("legacyoutput", *legacyoutput)

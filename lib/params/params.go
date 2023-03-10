@@ -70,7 +70,7 @@ func NewParams() *Params {
 
 	ignore := parser.StringList("R", "ignore", &argparse.Options{
 		Required: false,
-		Help:     "Ignores passed VendorID (Left part of : in [VendorID:DeviceID]) outside of the selected IOMMU group when doing a --related search, you can use this to ignore unreliable Vendor IDs when doing related searches. (works with -g -u -i and -n)",
+		Help:     "Ignores passed VendorID (Left part of : in [VendorID:DeviceID]) outside of the selected IOMMU group when doing a --related search, you can use this to ignore unreliable Vendor IDs when doing related searches. (works with -g -i and -n)",
 	})
 
 	kernelmodules := parser.Flag("k", "kernel", &argparse.Options{

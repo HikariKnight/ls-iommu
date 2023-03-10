@@ -193,9 +193,21 @@ func GetDevicesFromGroups(groups []int, related int, pArg *params.Params) []stri
 						if pArg.Flag["id"] && !pArg.Flag["pciaddr"] {
 							// If --id is supplied as an argument we display the VendorID:DeviceID
 							output = append(output, fmt.Sprintf("%s:%s\n", device.Vendor.ID, device.Product.ID))
+
+							if related > 0 {
+								// Find relatives and add them to the list
+								related_list := findRelatedDevices(device.Vendor.ID, pArg.FlagCounter["related"], pArg)
+								output = append(output, related_list...)
+							}
 						} else if !pArg.Flag["id"] && pArg.Flag["pciaddr"] {
 							// If --pciaddr is supplied as an argument we display the PCI Address
 							output = append(output, fmt.Sprintf("%s\n", device.Address))
+
+							if related > 0 {
+								// Find relatives and add them to the list
+								related_list := findRelatedDevices(device.Vendor.ID, pArg.FlagCounter["related"], pArg)
+								output = append(output, related_list...)
+							}
 						}
 					}
 				}
@@ -232,14 +244,26 @@ func findRelatedDevices(vendorid string, related int, pArg *params.Params) []str
 				}
 
 				if !ignoreDevice {
-					// Generate the device list with the data we want
-					line := generateDevList(id, device, pArg)
-					devs = append(devs, line)
+					// If we do not want the Device IDs or PCI Address
+					if !pArg.Flag["id"] && !pArg.Flag["pciaddr"] {
+						// Generate the device list with the data we want
+						line := generateDevList(id, device, pArg)
+						devs = append(devs, line)
 
-					if related > 1 {
-						// Prevent an infinite loop by passing 0 instead of related variable
-						other := GetDevicesFromGroups([]int{id}, 0, pArg)
-						devs = append(devs, other...)
+						if related > 1 {
+							// Prevent an infinite loop by passing 0 instead of related variable
+							other := GetDevicesFromGroups([]int{id}, 0, pArg)
+							devs = append(devs, other...)
+						}
+
+					} else if !strings.Contains(device.Subclass.Name, "bridge") {
+						if pArg.Flag["id"] && !pArg.Flag["pciaddr"] {
+							// If --id is supplied as an argument we display the VendorID:DeviceID
+							devs = append(devs, fmt.Sprintf("%s:%s\n", device.Vendor.ID, device.Product.ID))
+						} else if !pArg.Flag["id"] && pArg.Flag["pciaddr"] {
+							// If --pciaddr is supplied as an argument we display the PCI Address
+							devs = append(devs, fmt.Sprintf("%s\n", device.Address))
+						}
 					}
 				}
 			}

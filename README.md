@@ -17,7 +17,20 @@ More extended functionality is planned.
 * List devices of individual or multiple IOMMU groups
 * Can show you kernel driver info for the devices
 * Can attempt to get related devices (devices that share vendorID) or devices located in the same IOMMU group as the device(s), the best method is used for -r depending on what you look for.
-
-## Features being worked on
 * Flag to list only VendorID:DeviceID for all devices found
 * Flag to list only PCI Address for all devices found
+* A flag you can use to ignore specific VendorIDs when doing a related devices search
+
+
+## Build instructions
+Prerequisites: 
+* Go 1.20+
+* git
+
+```bash
+git clone https://github.com/HikariKnight/ls-iommu.git
+cd ls-iommu
+go build
+```
+
+The binary `ls-iommu` will now be located the root of the project directory.

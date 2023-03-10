@@ -2,6 +2,8 @@ package iommu
 
 import (
 	"fmt"
+	"log"
+	"sort"
 
 	"github.com/HikariKnight/ls-iommu/lib/params"
 	"github.com/jaypipes/ghw"
@@ -129,4 +131,43 @@ func generateDevList(id int, device *pci.Device, pArg *params.Params) string {
 	}
 
 	return line
+}
+
+// Function to just print out a string array to STDOUT
+func PrintOutput(out []string) {
+	if len(out) == 0 {
+		log.Fatal("IOMMU disabled in UEFI/BIOS and/or you have not configured your\n\t\t    bootloader to enable IOMMU with the kernel boot arguments!")
+	}
+
+	// Remove duplicate lines
+	output := removeDuplicateLines(out)
+	// Sort cleaned output
+	sort.Strings(output)
+
+	// Print output line by line
+	for _, line := range output {
+		fmt.Print(line)
+	}
+}
+
+// Removes duplicate lines from a string slice, useful for cleaning up the output if doing multiple scans
+func removeDuplicateLines(lines []string) []string {
+	// Make a map to keep track of which strings have been processed
+	keys := make(map[string]bool)
+
+	// Make a new string slice
+	var list []string
+
+	// For each line
+	for _, entry := range lines {
+		// If the line has not been processed before
+		if _, value := keys[entry]; !value {
+			// Mark it as processed in our map
+			keys[entry] = true
+
+			// Add line to our list
+			list = append(list, entry)
+		}
+	}
+	return list
 }

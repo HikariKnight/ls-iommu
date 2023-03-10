@@ -8,71 +8,11 @@ import (
 
 	iommu "github.com/HikariKnight/ls-iommu/lib/iommu"
 	params "github.com/HikariKnight/ls-iommu/lib/params"
-	"github.com/akamensky/argparse"
 )
 
 func main() {
-	// Setup the parser for arguments
-	parser := argparse.NewParser("ls-iommu", "A Tool to print out all devices and their IOMMU groups")
-
-	// Add all flags into 1 struct for easy portability later
+	// Get all our arguments in 1 neat struct
 	pArg := params.NewParams()
-
-	// Configure arguments
-	gpu := parser.Flag("g", "gpu", &argparse.Options{
-		Required: false,
-		Help:     "List all GPUs.",
-	})
-
-	usb := parser.Flag("u", "usb", &argparse.Options{
-		Required: false,
-		Help:     "List all USB controllers.",
-	})
-
-	nic := parser.Flag("n", "network", &argparse.Options{
-		Required: false,
-		Help:     "List all Network controllers.",
-	})
-
-	related := parser.FlagCounter("r", "related", &argparse.Options{
-		Required: false,
-		Help:     "Attempt to list related devices that share Vendor ID or\n\t\t IOMMU Groups (used with -g -u -i and -n), pass -rr if you want to search using both when used with -g -i or -n\n\t\t Note: -rr can be inaccurate or too broad when many devices share Vendor ID",
-	})
-
-	iommu_group := parser.IntList("i", "group", &argparse.Options{
-		Required: false,
-		Help:     "List everything in the IOMMU groups given. Supply argument multiple times to list additional groups.",
-	})
-
-	kernelmodules := parser.Flag("k", "kernel", &argparse.Options{
-		Required: false,
-		Help:     "Lists subsystems and kernel drivers using the devices.",
-		Default:  false,
-	})
-
-	legacyoutput := parser.Flag("", "legacy", &argparse.Options{
-		Required: false,
-		Help:     "Generate the output unsorted and be the same output as the old bash script",
-		Default:  false,
-	})
-
-	// Parse arguments
-	err := parser.Parse(os.Args)
-	if err != nil {
-		// In case of error print error and print usage
-		// This can also be done by passing -h or --help flags
-		fmt.Print(parser.Usage(err))
-		os.Exit(4)
-	}
-
-	// Add all parsed arguments to a struct for portability since we will use them all over the program
-	pArg.AddFlag("gpu", *gpu)
-	pArg.AddFlag("usb", *usb)
-	pArg.AddFlag("nic", *nic)
-	pArg.AddFlagCounter("related", *related)
-	pArg.AddIntList("iommu_group", *iommu_group)
-	pArg.AddFlag("kernelmodules", *kernelmodules)
-	pArg.AddFlag("legacyoutput", *legacyoutput)
 
 	// Work with the output depending on arguments given
 	if pArg.Flag["gpu"] {
@@ -80,7 +20,7 @@ func main() {
 		output := iommu.MatchSubclass(`VGA`, pArg)
 
 		// Get all devices in specified IOMMU groups and append it to the output
-		other := iommu.GetDevicesFromGroups(*iommu_group, pArg.FlagCounter["related"], pArg)
+		other := iommu.GetDevicesFromGroups(pArg.IntList["iommu_group"], pArg.FlagCounter["related"], pArg)
 		output = append(output, other...)
 
 		// Print the output and exit
@@ -91,7 +31,7 @@ func main() {
 		output := iommu.MatchSubclass(`USB controller`, pArg)
 
 		// Get all devices in specified IOMMU groups and append it to the output
-		other := iommu.GetDevicesFromGroups(*iommu_group, pArg.FlagCounter["related"], pArg)
+		other := iommu.GetDevicesFromGroups(pArg.IntList["iommu_group"], pArg.FlagCounter["related"], pArg)
 		output = append(output, other...)
 
 		// Print the output and exit
@@ -106,7 +46,7 @@ func main() {
 		output = append(output, wifi...)
 
 		// Get all devices in specified IOMMU groups and append it to the output
-		other := iommu.GetDevicesFromGroups(*iommu_group, pArg.FlagCounter["related"], pArg)
+		other := iommu.GetDevicesFromGroups(pArg.IntList["iommu_group"], pArg.FlagCounter["related"], pArg)
 		output = append(output, other...)
 
 		// Print the output and exit
@@ -114,7 +54,7 @@ func main() {
 		os.Exit(0)
 	} else if len(pArg.IntList["iommu_group"]) > 0 {
 		// Get all devices in specified IOMMU groups and append it to the output
-		output := iommu.GetDevicesFromGroups(*iommu_group, pArg.FlagCounter["related"], pArg)
+		output := iommu.GetDevicesFromGroups(pArg.IntList["iommu_group"], pArg.FlagCounter["related"], pArg)
 
 		// Print the output and exit
 		printoutput(output)

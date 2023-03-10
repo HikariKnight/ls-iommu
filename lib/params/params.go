@@ -1,10 +1,17 @@
 package params
 
+import (
+	"fmt"
+	"os"
+
+	"github.com/akamensky/argparse"
+)
+
 /*
 	The whole purpose of this module is to make a struct
 	to just carry all our parsed arguments around between functions
 
-	Create a Params struct with
+	Create a Params struct with all the argparse arguments
 	pArg := params.NewParams()
 */
 
@@ -14,23 +21,84 @@ type Params struct {
 	IntList     map[string][]int
 }
 
-func (p *Params) AddFlag(name string, flag bool) {
+func (p *Params) addFlag(name string, flag bool) {
 	p.Flag[name] = flag
 }
 
-func (p *Params) AddFlagCounter(name string, flag int) {
+func (p *Params) addFlagCounter(name string, flag int) {
 	p.FlagCounter[name] = flag
 }
 
-func (p *Params) AddIntList(name string, flag []int) {
+func (p *Params) addIntList(name string, flag []int) {
 	p.IntList[name] = flag
 }
 
 func NewParams() *Params {
-	p := &Params{
+	// Setup the parser for arguments
+	parser := argparse.NewParser("ls-iommu", "A Tool to print out all devices and their IOMMU groups")
+
+	// Configure arguments
+	gpu := parser.Flag("g", "gpu", &argparse.Options{
+		Required: false,
+		Help:     "List all GPUs.",
+	})
+
+	usb := parser.Flag("u", "usb", &argparse.Options{
+		Required: false,
+		Help:     "List all USB controllers.",
+	})
+
+	nic := parser.Flag("n", "network", &argparse.Options{
+		Required: false,
+		Help:     "List all Network controllers.",
+	})
+
+	related := parser.FlagCounter("r", "related", &argparse.Options{
+		Required: false,
+		Help:     "Attempt to list related devices that share Vendor ID or\n\t\t IOMMU Groups (used with -g -u -i and -n), pass -rr if you want to search using both when used with -g -i or -n\n\t\t Note: -rr can be inaccurate or too broad when many devices share Vendor ID",
+	})
+
+	iommu_group := parser.IntList("i", "group", &argparse.Options{
+		Required: false,
+		Help:     "List everything in the IOMMU groups given. Supply argument multiple times to list additional groups.",
+	})
+
+	kernelmodules := parser.Flag("k", "kernel", &argparse.Options{
+		Required: false,
+		Help:     "Lists subsystems and kernel drivers using the devices.",
+		Default:  false,
+	})
+
+	legacyoutput := parser.Flag("", "legacy", &argparse.Options{
+		Required: false,
+		Help:     "Generate the output unsorted and be the same output as the old bash script",
+		Default:  false,
+	})
+
+	// Parse arguments
+	err := parser.Parse(os.Args)
+	if err != nil {
+		// In case of error print error and print usage
+		// This can also be done by passing -h or --help flags
+		fmt.Print(parser.Usage(err))
+		os.Exit(4)
+	}
+
+	// Make our struct
+	pArg := &Params{
 		Flag:        make(map[string]bool),
 		FlagCounter: make(map[string]int),
 		IntList:     make(map[string][]int),
 	}
-	return p
+
+	// Add all parsed arguments to a struct for portability since we will use them all over the program
+	pArg.addFlag("gpu", *gpu)
+	pArg.addFlag("usb", *usb)
+	pArg.addFlag("nic", *nic)
+	pArg.addFlagCounter("related", *related)
+	pArg.addIntList("iommu_group", *iommu_group)
+	pArg.addFlag("kernelmodules", *kernelmodules)
+	pArg.addFlag("legacyoutput", *legacyoutput)
+
+	return pArg
 }

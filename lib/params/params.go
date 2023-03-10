@@ -75,6 +75,18 @@ func NewParams() *Params {
 		Default:  false,
 	})
 
+	id := parser.Flag("", "id", &argparse.Options{
+		Required: false,
+		Help:     "Print out only VendorID:DeviceID for devices (Only works with -i)",
+		Default:  false,
+	})
+
+	pciaddr := parser.Flag("", "pciaddr", &argparse.Options{
+		Required: false,
+		Help:     "Print out only the PCI Address for devices (Only works with -i)",
+		Default:  false,
+	})
+
 	// Parse arguments
 	err := parser.Parse(os.Args)
 	if err != nil {
@@ -99,6 +111,8 @@ func NewParams() *Params {
 	pArg.addIntList("iommu_group", *iommu_group)
 	pArg.addFlag("kernelmodules", *kernelmodules)
 	pArg.addFlag("legacyoutput", *legacyoutput)
+	pArg.addFlag("id", *id)
+	pArg.addFlag("pciaddr", *pciaddr)
 
 	return pArg
 }

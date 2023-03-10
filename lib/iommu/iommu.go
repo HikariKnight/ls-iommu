@@ -176,16 +176,27 @@ func GetDevicesFromGroups(groups []int, related int, pArg *params.Params) []stri
 			} else {
 				// For each device in specified IOMMU group
 				for _, device := range alldevs.Groups[group].Devices {
-					// Generate the device list with the data we want
-					line := generateDevList(group, device, pArg)
+					// If we do not want the Device IDs or PCI Address
+					if !pArg.Flag["id"] && !pArg.Flag["pciaddr"] {
+						// Generate the device list with the data we want
+						line := generateDevList(group, device, pArg)
 
-					// Append line to output
-					output = append(output, line)
+						// Append line to output
+						output = append(output, line)
 
-					if related > 0 {
-						// Find relatives and add them to the list
-						related_list := findRelatedDevices(device.Vendor.ID, pArg.FlagCounter["related"], pArg)
-						output = append(output, related_list...)
+						if related > 0 {
+							// Find relatives and add them to the list
+							related_list := findRelatedDevices(device.Vendor.ID, pArg.FlagCounter["related"], pArg)
+							output = append(output, related_list...)
+						}
+					} else if !strings.Contains(device.Subclass.Name, "bridge") {
+						if pArg.Flag["id"] && !pArg.Flag["pciaddr"] {
+							// If --id is supplied as an argument we display the VendorID:DeviceID
+							output = append(output, fmt.Sprintf("%s:%s\n", device.Vendor.ID, device.Product.ID))
+						} else if !pArg.Flag["id"] && pArg.Flag["pciaddr"] {
+							// If --pciaddr is supplied as an argument we display the PCI Address
+							output = append(output, fmt.Sprintf("%s\n", device.Address))
+						}
 					}
 				}
 			}

@@ -134,9 +134,11 @@ func generateDevList(id int, device *pci.Device, pArg *params.Params) string {
 }
 
 // Function to just print out a string array to STDOUT
-func PrintOutput(out []string) {
-	if len(out) == 0 {
+func PrintOutput(out []string, pArg *params.Params) {
+	if len(out) == 0 && (!pArg.Flag["id"] && !pArg.Flag["pciaddr"]) {
 		log.Fatal("IOMMU disabled in UEFI/BIOS and/or you have not configured your\n\t\t    bootloader to enable IOMMU with the kernel boot arguments!")
+	} else if len(out) == 0 && (pArg.Flag["id"] || pArg.Flag["pciaddr"]) {
+		log.Fatal("--id or --pciaddr detected however no Device IDs or PCI Addresses were printed\nThis could be because there were only bridge devices found.\nIf other flags also results in a blank output then you do not have IOMMU enabled in UEFI/BIOS or you are missing the kernel flags in your bootloader!")
 	}
 
 	// Remove duplicate lines

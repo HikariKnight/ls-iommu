@@ -21,7 +21,7 @@ func main() {
 		output = append(output, other...)
 
 		// Print the output and exit
-		iommu.PrintOutput(output)
+		iommu.PrintOutput(output, pArg)
 		os.Exit(0)
 	} else if pArg.Flag["usb"] {
 		// Get all USB controllers
@@ -32,7 +32,7 @@ func main() {
 		output = append(output, other...)
 
 		// Print the output and exit
-		iommu.PrintOutput(output)
+		iommu.PrintOutput(output, pArg)
 		os.Exit(0)
 	} else if pArg.Flag["nic"] {
 		// Get all Ethernet controllers
@@ -47,18 +47,18 @@ func main() {
 		output = append(output, other...)
 
 		// Print the output and exit
-		iommu.PrintOutput(output)
+		iommu.PrintOutput(output, pArg)
 		os.Exit(0)
 	} else if len(pArg.IntList["iommu_group"]) > 0 {
 		// Get all devices in specified IOMMU groups and append it to the output
 		output := iommu.GetDevicesFromGroups(pArg.IntList["iommu_group"], pArg.FlagCounter["related"], pArg)
 
 		// Print the output and exit
-		iommu.PrintOutput(output)
+		iommu.PrintOutput(output, pArg)
 		os.Exit(0)
 	} else {
 		// Default behaviour mimicks the bash variant that this is based on
-		out := iommu.GetAllDevices(pArg)
-		iommu.PrintOutput(out)
+		output := iommu.GetAllDevices(pArg)
+		iommu.PrintOutput(output, pArg)
 	}
 }

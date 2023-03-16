@@ -136,20 +136,52 @@ func MatchSubclass(searchval string, pArg *params.Params) []string {
 		for _, device := range alldevs.Groups[id].Devices {
 			// If the device has a subclass matching what we are looking for
 			if strings.Contains(device.Subclass.Name, searchval) {
-				// Generate the device list with the data we want
-				line := generateDevList(id, device, pArg)
-				devs = append(devs, line)
+				if len(pArg.IntList["iommu_group"]) == 0 {
+					// Generate the device list with the data we want
+					line := generateDevList(id, device, pArg)
+					devs = append(devs, line)
 
-				// If we want to search for related devices
-				if pArg.FlagCounter["related"] > 0 && searchval != `USB controller` {
-					// Find relatives and add them to the list
-					related_list := findRelatedDevices(device.Vendor.ID, pArg.FlagCounter["related"], pArg)
-					devs = append(devs, related_list...)
+					// If we want to search for related devices
+					if pArg.FlagCounter["related"] > 0 && searchval != `USB controller` {
+						// Find relatives and add them to the list
+						related_list := findRelatedDevices(device.Vendor.ID, pArg.FlagCounter["related"], pArg)
+						devs = append(devs, related_list...)
 
-				} else if pArg.FlagCounter["related"] > 0 && searchval == `USB controller` {
-					// Prevent an infinite loop by passing 0 instead of related
-					other := GetDevicesFromGroups([]int{id}, 0, pArg)
-					devs = append(devs, other...)
+					} else if pArg.FlagCounter["related"] > 0 && searchval == `USB controller` {
+						// Prevent an infinite loop by passing 0 instead of related
+						other := GetDevicesFromGroups([]int{id}, 0, pArg)
+						devs = append(devs, other...)
+					}
+				} else {
+					for _, group := range pArg.IntList["iommu_group"] {
+						if id == group {
+							// If we wand the Device ID or PCI Address
+							if pArg.Flag["id"] && !pArg.Flag["pciaddr"] {
+								// If --id is supplied as an argument we display the VendorID:DeviceID
+								devs = append(devs, fmt.Sprintf("%s:%s\n", device.Vendor.ID, device.Product.ID))
+
+							} else if !pArg.Flag["id"] && pArg.Flag["pciaddr"] {
+								// If --pciaddr is supplied as an argument we display the PCI Address
+								devs = append(devs, fmt.Sprintf("%s\n", device.Address))
+							} else {
+								// Generate the device list with the data we want
+								line := generateDevList(id, device, pArg)
+								devs = append(devs, line)
+							}
+
+							// If we want to search for related devices
+							if pArg.FlagCounter["related"] > 0 && searchval != `USB controller` {
+								// Find relatives and add them to the list
+								related_list := findRelatedDevices(device.Vendor.ID, pArg.FlagCounter["related"], pArg)
+								devs = append(devs, related_list...)
+
+							} else if pArg.FlagCounter["related"] > 0 && searchval == `USB controller` {
+								// Prevent an infinite loop by passing 0 instead of related
+								other := GetDevicesFromGroups([]int{id}, 0, pArg)
+								devs = append(devs, other...)
+							}
+						}
+					}
 				}
 			}
 		}

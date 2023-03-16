@@ -16,20 +16,12 @@ func main() {
 		// Get all GPUs (3d controllers are ignored)
 		output := iommu.MatchSubclass(`VGA`, pArg)
 
-		// Get all devices in specified IOMMU groups and append it to the output
-		other := iommu.GetDevicesFromGroups(pArg.IntList["iommu_group"], pArg.FlagCounter["related"], pArg)
-		output = append(output, other...)
-
 		// Print the output and exit
 		iommu.PrintOutput(output, pArg)
 		os.Exit(0)
 	} else if pArg.Flag["usb"] {
 		// Get all USB controllers
 		output := iommu.MatchSubclass(`USB controller`, pArg)
-
-		// Get all devices in specified IOMMU groups and append it to the output
-		other := iommu.GetDevicesFromGroups(pArg.IntList["iommu_group"], pArg.FlagCounter["related"], pArg)
-		output = append(output, other...)
 
 		// Print the output and exit
 		iommu.PrintOutput(output, pArg)
@@ -41,10 +33,6 @@ func main() {
 		// Get all Wi-Fi controllers
 		wifi := iommu.MatchSubclass(`Network controller`, pArg)
 		output = append(output, wifi...)
-
-		// Get all devices in specified IOMMU groups and append it to the output
-		other := iommu.GetDevicesFromGroups(pArg.IntList["iommu_group"], pArg.FlagCounter["related"], pArg)
-		output = append(output, other...)
 
 		// Print the output and exit
 		iommu.PrintOutput(output, pArg)

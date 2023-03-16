@@ -45,17 +45,17 @@ func NewParams() *Params {
 	// Configure arguments
 	gpu := parser.Flag("g", "gpu", &argparse.Options{
 		Required: false,
-		Help:     "List all GPUs.",
+		Help:     "List all GPUs. (use -i # to only display results from specified IOMMU group)",
 	})
 
 	usb := parser.Flag("u", "usb", &argparse.Options{
 		Required: false,
-		Help:     "List all USB controllers.",
+		Help:     "List all USB controllers. (use -i # to only display results from specified IOMMU group)",
 	})
 
 	nic := parser.Flag("n", "network", &argparse.Options{
 		Required: false,
-		Help:     "List all Network controllers.",
+		Help:     "List all Network controllers. (use -i # to only display results from specified IOMMU group)",
 	})
 
 	iommu_group := parser.IntList("i", "group", &argparse.Options{

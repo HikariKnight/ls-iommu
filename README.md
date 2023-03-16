@@ -12,7 +12,7 @@ More extended functionality is planned.
 ![screenshot](https://user-images.githubusercontent.com/2557889/223729837-66461127-997c-4ce4-9183-9d2b85219a07.png)
 
 ## Features
-* Has a flag to generate default ouptut text compatible with the bash version of ls-iommu (--legacy)
+* Has a flag to generate default ouptut text compatible with the bash version of ls-iommu (`--legacy`)
 * Can locate and display only GPUs, USB Controllers and Network cards
 * List devices of individual or multiple IOMMU groups
 * Can show you kernel driver info for the devices
@@ -20,6 +20,8 @@ More extended functionality is planned.
 * Flag to list only VendorID:DeviceID for all devices found
 * Flag to list only PCI Address for all devices found
 * A flag you can use to ignore specific VendorIDs when doing a related devices search
+* Can show only the info you are interested in on the device line using -F and then providing a comma separated list of objects you want to show on the device line (this does not affect the extra lines provided by `-k`)
+* Has a flag to get the vbios path for gpus (`-g --rom` or `-g -i X --rom`)
 
 
 ## Build instructions
@@ -30,7 +32,7 @@ Prerequisites:
 ```bash
 git clone https://github.com/HikariKnight/ls-iommu.git
 cd ls-iommu
-go build
+CGO_ENABLED=0 go build
 ```
 
 The binary `ls-iommu` will now be located the root of the project directory.

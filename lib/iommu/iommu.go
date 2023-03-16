@@ -93,7 +93,7 @@ func (i *IOMMU) Read() {
 	}
 	// If we have 0 groups so far, IOMMU is probably disabled
 	if len(i.Groups) == 0 {
-		log.Fatal("IOMMU Disabled in UEFI/BIOS or not enabled in boot arguments!")
+		log.Fatal("IOMMU Disabled in UEFI/BIOS and/or not enabled in boot arguments!")
 	}
 }
 

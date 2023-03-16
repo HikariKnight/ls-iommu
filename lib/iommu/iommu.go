@@ -176,7 +176,7 @@ func MatchSubclass(searchval string, pArg *params.Params) []string {
 				} else {
 					for _, group := range pArg.IntList["iommu_group"] {
 						if id == group {
-							// If we wand the Device ID or PCI Address
+							// If we want the Device ID or PCI Address
 							if pArg.Flag["id"] && !pArg.Flag["pciaddr"] {
 								// If --id is supplied as an argument we display the VendorID:DeviceID
 								devs = append(devs, fmt.Sprintf("%s:%s\n", device.Vendor.ID, device.Product.ID))

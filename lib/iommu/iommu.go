@@ -142,7 +142,7 @@ func MatchSubclass(searchval string, pArg *params.Params) []string {
 		for _, device := range alldevs.Groups[id].Devices {
 			// If the device has a subclass matching what we are looking for
 			if strings.Contains(device.Subclass.Name, searchval) {
-				if len(pArg.IntList["iommu_group"]) == 0 {
+				if len(pArg.IntList["iommu_group"]) == 0 && !pArg.Flag["rom"] {
 					// Generate the device list with the data we want
 					line := generateDevList(id, device, pArg)
 					devs = append(devs, line)
@@ -157,6 +157,21 @@ func MatchSubclass(searchval string, pArg *params.Params) []string {
 						// Prevent an infinite loop by passing 0 instead of related
 						other := GetDevicesFromGroups([]int{id}, 0, pArg)
 						devs = append(devs, other...)
+					}
+				} else if pArg.Flag["rom"] && pArg.Flag["gpu"] {
+					// If we are asked to get the path to the gpu vbios
+					if len(pArg.IntList["iommu_group"]) > 0 {
+						// If we are asked to only get a specific IOMMU group
+						for _, group := range pArg.IntList["iommu_group"] {
+							// If the iommu group matches the one we are currently processing
+							if id == group {
+								// Print the GPU rom path
+								devs = append(devs, GetRomPath(device, pArg)...)
+							}
+						}
+					} else {
+						// Else get the vbios path for any gpu
+						devs = append(devs, GetRomPath(device, pArg)...)
 					}
 				} else {
 					for _, group := range pArg.IntList["iommu_group"] {

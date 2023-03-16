@@ -95,6 +95,11 @@ func NewParams() *Params {
 		Help:     "Print out only the PCI Address for non bridge devices (Only works with -i)",
 	})
 
+	rom := parser.Flag("", "rom", &argparse.Options{
+		Required: false,
+		Help:     "Print out the rom path GPUs. (must be used with -g or --gpu)",
+	})
+
 	// Parse arguments
 	err := parser.Parse(os.Args)
 	if err != nil {
@@ -123,6 +128,7 @@ func NewParams() *Params {
 	pArg.addFlag("legacyoutput", *legacyoutput)
 	pArg.addFlag("id", *id)
 	pArg.addFlag("pciaddr", *pciaddr)
+	pArg.addFlag("rom", *rom)
 
 	return pArg
 }

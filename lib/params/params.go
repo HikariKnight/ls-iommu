@@ -20,6 +20,7 @@ type Params struct {
 	FlagCounter map[string]int
 	IntList     map[string][]int
 	StringList  map[string][]string
+	String      map[string]string
 }
 
 func (p *Params) addFlag(name string, flag bool) {
@@ -36,6 +37,10 @@ func (p *Params) addIntList(name string, flag []int) {
 
 func (p *Params) addStringList(name string, flag []string) {
 	p.StringList[name] = flag
+}
+
+func (p *Params) addString(name string, flag string) {
+	p.String[name] = flag
 }
 
 func NewParams() *Params {
@@ -100,6 +105,12 @@ func NewParams() *Params {
 		Help:     "Print out the rom path GPUs. (must be used with -g or --gpu)",
 	})
 
+	format := parser.String("F", "format", &argparse.Options{
+		Required: false,
+		Help:     "Formats the device line output the way you want it (omit what you do not want)\n\t\t Supported objects: pciaddr, subclass_name, subclass_name:, subclass_id, subclass_id:, name, name:, device_id, device_id:, revision",
+		Default:  "pciaddr,subclass_name,subclass_id,name,device_id,revision",
+	})
+
 	// Parse arguments
 	err := parser.Parse(os.Args)
 	if err != nil {
@@ -115,6 +126,7 @@ func NewParams() *Params {
 		FlagCounter: make(map[string]int),
 		IntList:     make(map[string][]int),
 		StringList:  make(map[string][]string),
+		String:      make(map[string]string),
 	}
 
 	// Add all parsed arguments to a struct for portability since we will use them all over the program
@@ -129,6 +141,7 @@ func NewParams() *Params {
 	pArg.addFlag("id", *id)
 	pArg.addFlag("pciaddr", *pciaddr)
 	pArg.addFlag("rom", *rom)
+	pArg.addString("format", *format)
 
 	return pArg
 }

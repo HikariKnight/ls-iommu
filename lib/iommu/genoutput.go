@@ -3,6 +3,7 @@ package iommu
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/HikariKnight/ls-iommu/lib/params"
 	"github.com/jaypipes/ghw"
@@ -12,6 +13,7 @@ import (
 // Generates a line with the Device info and formats it properly to be similar to the bash version of ls-iommu
 func GenDeviceLine(group int, device *pci.Device, pArg *params.Params) string {
 	var line string
+	var formated_line []string
 
 	// If we want legacy output (to be output compatible with the bash version)
 	var iommu_group string
@@ -23,33 +25,49 @@ func GenDeviceLine(group int, device *pci.Device, pArg *params.Params) string {
 		iommu_group = fmt.Sprintf("% 3d", group)
 	}
 
-	// If the device has no revision, ommit the (rev ID), in both cases we generate the line with device info
-	if device.Revision != "0x00" {
-		line = fmt.Sprintf("IOMMU Group %s: %s %s [%s%s]: %s %s [%s:%s] (rev %s)\n",
-			iommu_group,
-			device.Address,
-			device.Subclass.Name,
-			device.Class.ID,
-			device.Subclass.ID,
-			device.Vendor.Name,
-			device.Product.Name,
-			device.Vendor.ID,
-			device.Product.ID,
-			device.Revision[len(device.Revision)-2:],
-		)
-	} else {
-		line = fmt.Sprintf("IOMMU Group %s: %s %s [%s%s]: %s %s [%s:%s]\n",
-			iommu_group,
-			device.Address,
-			device.Subclass.Name,
-			device.Class.ID,
-			device.Subclass.ID,
-			device.Vendor.Name,
-			device.Product.Name,
-			device.Vendor.ID,
-			device.Product.ID,
-		)
+	formating := strings.Split(pArg.String["format"], ",")
+
+	formated_line = append(formated_line, fmt.Sprintf("IOMMU Group %s:", iommu_group))
+	for _, object := range formating {
+		// Apply the object into our formated line in the order specified with -F
+		switch object {
+		case "pciaddr":
+			formated_line = append(formated_line, device.Address)
+		case "subclass_name":
+			formated_line = append(formated_line, device.Subclass.Name)
+		case "subclass_name:":
+			formated_line = append(formated_line, fmt.Sprintf("%s:", device.Subclass.Name))
+		case "subclass_id":
+			formated_line = append(formated_line, fmt.Sprintf("[%s%s]", device.Class.ID, device.Subclass.ID))
+		case "subclass_id:":
+			formated_line = append(formated_line, fmt.Sprintf("[%s%s]:", device.Class.ID, device.Subclass.ID))
+		case "name":
+			formated_line = append(formated_line, fmt.Sprintf("%s %s", device.Vendor.Name, device.Product.Name))
+		case "name:":
+			formated_line = append(formated_line, fmt.Sprintf("%s %s:", device.Vendor.Name, device.Product.Name))
+		case "device_id":
+			formated_line = append(formated_line, fmt.Sprintf("[%s:%s]", device.Vendor.ID, device.Product.ID))
+		case "device_id:":
+			formated_line = append(formated_line, fmt.Sprintf("[%s:%s]:", device.Vendor.ID, device.Product.ID))
+		}
+
+		// There is a special case for the revision object
+		if object == "revision" {
+			// If we are NOT using the default format
+			if pArg.String["format"] != "pciaddr,subclass_name,subclass_id,name,device_id,revision" {
+				// Always show the revision
+				formated_line = append(formated_line, fmt.Sprintf("(rev %s)", device.Revision[len(device.Revision)-2:]))
+			} else {
+				// Else only show it if the device is not on revision 00
+				if device.Revision != "0x00" {
+					formated_line = append(formated_line, fmt.Sprintf("(rev %s)", device.Revision[len(device.Revision)-2:]))
+				}
+			}
+		}
 	}
+
+	// Join our formated line together into 1 line
+	line = fmt.Sprintf("%s\n", strings.Join(formated_line, " "))
 
 	return line
 }

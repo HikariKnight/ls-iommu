@@ -2,6 +2,7 @@ package iommu
 
 import (
 	"fmt"
+	"log"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -89,6 +90,10 @@ func (i *IOMMU) Read() {
 				i.Groups[group_id].AddDevice(device)
 			}
 		}
+	}
+	// If we have 0 groups so far, IOMMU is probably disabled
+	if len(i.Groups) == 0 {
+		log.Fatal("IOMMU Disabled in UEFI/BIOS or not enabled in boot arguments!")
 	}
 }
 

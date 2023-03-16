@@ -107,8 +107,8 @@ func NewParams() *Params {
 
 	format := parser.String("F", "format", &argparse.Options{
 		Required: false,
-		Help:     "Formats the device line output the way you want it (omit what you do not want)\n\t\t Supported objects: pciaddr, subclass_name, subclass_name:, subclass_id, subclass_id:, name, name:, device_id, device_id:, revision",
-		Default:  "pciaddr,subclass_name,subclass_id,name,device_id,revision",
+		Help:     "Formats the device line output the way you want it (omit what you do not want)\n\t\t Supported objects: pciaddr, subclass_name, subclass_name:, subclass_id, subclass_id:, name, name:, device_id, device_id:, revision, optional_revision",
+		Default:  "pciaddr,subclass_name,subclass_id,name,device_id,optional_revision",
 	})
 
 	// Parse arguments

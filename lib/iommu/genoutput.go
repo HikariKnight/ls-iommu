@@ -49,19 +49,12 @@ func GenDeviceLine(group int, device *pci.Device, pArg *params.Params) string {
 			formated_line = append(formated_line, fmt.Sprintf("[%s:%s]", device.Vendor.ID, device.Product.ID))
 		case "device_id:":
 			formated_line = append(formated_line, fmt.Sprintf("[%s:%s]:", device.Vendor.ID, device.Product.ID))
-		}
-
-		// There is a special case for the revision object
-		if object == "revision" {
-			// If we are NOT using the default format
-			if pArg.String["format"] != "pciaddr,subclass_name,subclass_id,name,device_id,revision" {
-				// Always show the revision
+		case "revision":
+			formated_line = append(formated_line, fmt.Sprintf("(rev %s)", device.Revision[len(device.Revision)-2:]))
+		case "optional_revision":
+			// Else only show it if the device is not on revision 00
+			if device.Revision != "0x00" {
 				formated_line = append(formated_line, fmt.Sprintf("(rev %s)", device.Revision[len(device.Revision)-2:]))
-			} else {
-				// Else only show it if the device is not on revision 00
-				if device.Revision != "0x00" {
-					formated_line = append(formated_line, fmt.Sprintf("(rev %s)", device.Revision[len(device.Revision)-2:]))
-				}
 			}
 		}
 	}

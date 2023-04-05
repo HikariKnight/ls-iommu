@@ -8,7 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/HikariKnight/ls-iommu/lib/params"
+	"github.com/HikariKnight/ls-iommu/pkg/errorcheck"
+	"github.com/HikariKnight/ls-iommu/pkg/params"
 	"github.com/jaypipes/ghw"
 	ghwpci "github.com/jaypipes/ghw/pkg/pci"
 )
@@ -44,9 +45,9 @@ func (i *IOMMU) Read() {
 	i.Groups = make(map[int]*Group)
 	// Get all groups and associated devices
 	iommu_devices, err := filepath.Glob("/sys/kernel/iommu_groups/*/devices/*")
-	ErrorCheck(err)
+	errorcheck.ErrorCheck(err)
 	pci, err := ghw.PCI(ghw.WithDisableWarnings())
-	ErrorCheck(err)
+	errorcheck.ErrorCheck(err)
 
 	// Regex to get IOMMU groups and their devices from filepath
 	iommu_regex := regexp.MustCompile(`/sys/kernel/iommu_groups/(.*)/devices/(.*)`)
@@ -233,7 +234,7 @@ func GetDevicesFromGroups(groups []int, related int, pArg *params.Params) []stri
 		for _, group := range groups {
 			// Check if the IOMMU Group exists
 			if _, iommu_num := alldevs.Groups[group]; !iommu_num {
-				ErrorCheck(fmt.Errorf("IOMMU Group %v does not exist", group))
+				errorcheck.ErrorCheck(fmt.Errorf("IOMMU Group %v does not exist", group))
 
 			} else {
 				// For each device in specified IOMMU group
@@ -344,7 +345,7 @@ func MatchDEVs(regex string, pArg *params.Params) []string {
 
 	output := GetAllDevices(pArg)
 	gpuReg, err := regexp.Compile(regex)
-	ErrorCheck(err)
+	errorcheck.ErrorCheck(err)
 
 	for _, line := range output {
 		if gpuReg.MatchString(line) {

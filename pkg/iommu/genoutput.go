@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/HikariKnight/ls-iommu/lib/params"
+	"github.com/HikariKnight/ls-iommu/pkg/params"
 	"github.com/jaypipes/ghw"
 	"github.com/jaypipes/ghw/pkg/pci"
 )

@@ -45,9 +45,9 @@ func (i *IOMMU) Read() {
 	i.Groups = make(map[int]*Group)
 	// Get all groups and associated devices
 	iommu_devices, err := filepath.Glob("/sys/kernel/iommu_groups/*/devices/*")
-	errorcheck.ErrorCheck(err)
+	errorcheck.ErrorCheck(err, "Unable to glob /sys/kernel/iommu_groups/*/devices/*")
 	pci, err := ghw.PCI(ghw.WithDisableWarnings())
-	errorcheck.ErrorCheck(err)
+	errorcheck.ErrorCheck(err, "Failed to parse PCI devices")
 
 	// Regex to get IOMMU groups and their devices from filepath
 	iommu_regex := regexp.MustCompile(`/sys/kernel/iommu_groups/(.*)/devices/(.*)`)
@@ -345,7 +345,7 @@ func MatchDEVs(regex string, pArg *params.Params) []string {
 
 	output := GetAllDevices(pArg)
 	gpuReg, err := regexp.Compile(regex)
-	errorcheck.ErrorCheck(err)
+	errorcheck.ErrorCheck(err, "Failed to compile MatchDEVs regex")
 
 	for _, line := range output {
 		if gpuReg.MatchString(line) {

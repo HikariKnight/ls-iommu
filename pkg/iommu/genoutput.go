@@ -45,6 +45,18 @@ func GenDeviceLine(group int, device *pci.Device, pArg *params.Params) string {
 			formated_line = append(formated_line, fmt.Sprintf("%s %s", device.Vendor.Name, device.Product.Name))
 		case "name:":
 			formated_line = append(formated_line, fmt.Sprintf("%s %s:", device.Vendor.Name, device.Product.Name))
+		case "prod_name":
+			formated_line = append(formated_line, device.Product.Name)
+		case "prod_name:":
+			formated_line = append(formated_line, fmt.Sprintf("%s:", device.Product.Name))
+		case "oem":
+			formated_line = append(formated_line, device.Subsystem.Name)
+		case "oem:":
+			formated_line = append(formated_line, fmt.Sprintf("%s:", device.Subsystem.Name))
+		case "vendor":
+			formated_line = append(formated_line, device.Vendor.Name)
+		case "vendor:":
+			formated_line = append(formated_line, fmt.Sprintf("%s:", device.Vendor.Name))
 		case "device_id":
 			formated_line = append(formated_line, fmt.Sprintf("[%s:%s]", device.Vendor.ID, device.Product.ID))
 		case "device_id:":

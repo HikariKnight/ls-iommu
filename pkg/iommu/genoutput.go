@@ -33,6 +33,8 @@ func GenDeviceLine(group int, device *pci.Device, pArg *params.Params) string {
 		switch object {
 		case "pciaddr":
 			formated_line = append(formated_line, device.Address)
+		case "pciaddr:":
+			formated_line = append(formated_line, fmt.Sprintf("%s:", device.Address))
 		case "subclass_name":
 			formated_line = append(formated_line, device.Subclass.Name)
 		case "subclass_name:":
@@ -63,10 +65,19 @@ func GenDeviceLine(group int, device *pci.Device, pArg *params.Params) string {
 			formated_line = append(formated_line, fmt.Sprintf("[%s:%s]:", device.Vendor.ID, device.Product.ID))
 		case "revision":
 			formated_line = append(formated_line, fmt.Sprintf("(rev %s)", device.Revision[len(device.Revision)-2:]))
+		case "revision:":
+			formated_line = append(formated_line, fmt.Sprintf("(rev %s):", device.Revision[len(device.Revision)-2:]))
 		case "optional_revision":
 			// Else only show it if the device is not on revision 00
 			if device.Revision != "0x00" {
 				formated_line = append(formated_line, fmt.Sprintf("(rev %s)", device.Revision[len(device.Revision)-2:]))
+			}
+		case "optional_revision:":
+			// Else only show it if the device is not on revision 00
+			if device.Revision != "0x00" {
+				formated_line = append(formated_line, fmt.Sprintf("(rev %s):", device.Revision[len(device.Revision)-2:]))
+			} else {
+				formated_line = append(formated_line, ":")
 			}
 		}
 	}

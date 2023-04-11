@@ -14,6 +14,25 @@ import (
 func GenDeviceLine(group int, device *pci.Device, pArg *params.Params) string {
 	var line string
 	var formated_line []string
+	var subvendor_name string
+
+	// We need to probe some extra info here so we need to use ghw
+	pci, err := ghw.PCI()
+	if err != nil {
+		fmt.Printf("Error getting PCI info: %v", err)
+	}
+
+	// Get the subvendor/OEM
+	subvendor := pci.Vendors[device.Subsystem.VendorID]
+
+	// If subvendor does exist
+	if subvendor != nil {
+		// Get the subvendor name
+		subvendor_name = pci.Vendors[device.Subsystem.VendorID].Name
+	} else {
+		// Else slap the vendor name on
+		subvendor_name = device.Vendor.Name
+	}
 
 	// If we want legacy output (to be output compatible with the bash version)
 	var iommu_group string
@@ -52,9 +71,9 @@ func GenDeviceLine(group int, device *pci.Device, pArg *params.Params) string {
 		case "prod_name:":
 			formated_line = append(formated_line, fmt.Sprintf("%s:", device.Product.Name))
 		case "oem":
-			formated_line = append(formated_line, device.Subsystem.Name)
+			formated_line = append(formated_line, subvendor_name)
 		case "oem:":
-			formated_line = append(formated_line, fmt.Sprintf("%s:", device.Subsystem.Name))
+			formated_line = append(formated_line, fmt.Sprintf("%s:", subvendor_name))
 		case "vendor":
 			formated_line = append(formated_line, device.Vendor.Name)
 		case "vendor:":

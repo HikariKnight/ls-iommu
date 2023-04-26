@@ -75,12 +75,12 @@ func NewParams() *Params {
 
 	related := parser.FlagCounter("r", "related", &argparse.Options{
 		Required: false,
-		Help:     "Attempt to list related devices that share Vendor ID or\n\t\t IOMMU Groups (used with -g -u -i and -n), pass -rr if you want to search using both when used with -g -i or -n\n\t\t Note: -rr can be inaccurate or too broad when many devices share Vendor ID",
+		Help:     "Attempt to list related devices that share IOMMU Groups or\n\t\t Vendor ID (used with -g -u -i -s and -n), pass -rr if you want to search using both when used with -g -i -s or -n\n\t\t Note: -rr can be inaccurate or too broad when many devices share Vendor ID",
 	})
 
 	ignore := parser.StringList("R", "ignore", &argparse.Options{
 		Required: false,
-		Help:     "Ignores passed VendorID (Left part of : in [VendorID:DeviceID]) outside of the selected IOMMU group when doing a --related search, you can use this to ignore unreliable Vendor IDs when doing related searches. (works with -g -i and -n)",
+		Help:     "Ignores passed VendorID (Left part of : in [VendorID:DeviceID]) outside of the selected IOMMU group when doing a --related search, you can use this to ignore unreliable Vendor IDs when doing related searches. (works with -g -i -u -s and -n)",
 	})
 
 	kernelmodules := parser.Flag("k", "kernel", &argparse.Options{

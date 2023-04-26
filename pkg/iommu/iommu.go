@@ -139,7 +139,7 @@ func MatchSubclass(searchval string, pArg *params.Params) []string {
 	alldevs := NewIOMMU()
 
 	// Make a regex to find devices that will need special exceptions for relative search
-	specialRelativeExceptions := regexp.MustCompile(`^(SATA|USB) controller`)
+	//specialRelativeExceptions := regexp.MustCompile(`^(SATA|USB) controller`)
 
 	// Iterate through the groups
 	for id := 0; id < len(alldevs.Groups); id++ {
@@ -153,15 +153,15 @@ func MatchSubclass(searchval string, pArg *params.Params) []string {
 					devs = append(devs, line)
 
 					// If we want to search for related devices
-					if pArg.FlagCounter["related"] > 0 && !specialRelativeExceptions.MatchString(searchval) {
-						// Find relatives and add them to the list
-						related_list := findRelatedDevices(device.Vendor.ID, pArg.FlagCounter["related"], pArg)
-						devs = append(devs, related_list...)
-
-					} else if pArg.FlagCounter["related"] > 0 && specialRelativeExceptions.MatchString(searchval) {
+					if pArg.FlagCounter["related"] == 1 {
 						// Prevent an infinite loop by passing 0 instead of related
 						other := GetDevicesFromGroups([]int{id}, 0, pArg)
 						devs = append(devs, other...)
+
+					} else if pArg.FlagCounter["related"] == 2 {
+						// Find relatives and add them to the list
+						related_list := findRelatedDevices(device.Vendor.ID, pArg.FlagCounter["related"], pArg)
+						devs = append(devs, related_list...)
 					}
 
 				} else if pArg.Flag["rom"] && pArg.Flag["gpu"] {
@@ -200,15 +200,15 @@ func MatchSubclass(searchval string, pArg *params.Params) []string {
 							}
 
 							// If we want to search for related devices
-							if pArg.FlagCounter["related"] > 0 && !specialRelativeExceptions.MatchString(searchval) {
-								// Find relatives and add them to the list
-								related_list := findRelatedDevices(device.Vendor.ID, pArg.FlagCounter["related"], pArg)
-								devs = append(devs, related_list...)
-
-							} else if pArg.FlagCounter["related"] > 0 && specialRelativeExceptions.MatchString(searchval) {
+							if pArg.FlagCounter["related"] == 1 {
 								// Prevent an infinite loop by passing 0 instead of related
 								other := GetDevicesFromGroups([]int{id}, 0, pArg)
 								devs = append(devs, other...)
+
+							} else if pArg.FlagCounter["related"] == 2 {
+								// Find relatives and add them to the list
+								related_list := findRelatedDevices(device.Vendor.ID, pArg.FlagCounter["related"], pArg)
+								devs = append(devs, related_list...)
 							}
 						}
 					}

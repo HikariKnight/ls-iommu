@@ -48,6 +48,22 @@ func main() {
 		iommu.PrintOutput(output, pArg)
 		os.Exit(0)
 
+	} else if pArg.Flag["nvme"] {
+		// Get all Ethernet controllers
+		output := iommu.MatchSubclass(`Non-Volatile memory controller`, pArg)
+
+		// Print the output and exit
+		iommu.PrintOutput(output, pArg)
+		os.Exit(0)
+
+	} else if pArg.Flag["audio"] {
+		// Get all Ethernet controllers
+		output := iommu.MatchSubclass(`Audio device`, pArg)
+
+		// Print the output and exit
+		iommu.PrintOutput(output, pArg)
+		os.Exit(0)
+
 	} else if len(pArg.IntList["iommu_group"]) > 0 {
 		// Get all devices in specified IOMMU groups and append it to the output
 		output := iommu.GetDevicesFromGroups(pArg.IntList["iommu_group"], pArg.FlagCounter["related"], pArg)

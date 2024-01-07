@@ -68,6 +68,16 @@ func NewParams() *Params {
 		Help:     "List all SATA controllers. (use -i # to only display results from specified IOMMU group)",
 	})
 
+	nvme := parser.Flag("", "nvme", &argparse.Options{
+		Required: false,
+		Help:     "List all NVM controllers. (use -i # to only display results from specified IOMMU group)",
+	})
+
+	audio := parser.Flag("", "audio", &argparse.Options{
+		Required: false,
+		Help:     "List all Audio devices. (use -i # to only display results from specified IOMMU group)",
+	})
+
 	iommu_group := parser.IntList("i", "group", &argparse.Options{
 		Required: false,
 		Help:     "List everything in the IOMMU groups given. Supply argument multiple times to list additional groups.",
@@ -139,6 +149,8 @@ func NewParams() *Params {
 	pArg.addFlag("usb", *usb)
 	pArg.addFlag("nic", *nic)
 	pArg.addFlag("sata", *sata)
+	pArg.addFlag("nvme", *nvme)
+	pArg.addFlag("audio", *audio)
 	pArg.addFlagCounter("related", *related)
 	pArg.addStringList("ignore", *ignore)
 	pArg.addIntList("iommu_group", *iommu_group)

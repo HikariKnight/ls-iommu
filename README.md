@@ -11,7 +11,11 @@ More functionality can be added if it is deemed useful, just open an issue with 
 
 Note: arm builds are generated but not tested as I lack the relevant hardware.
 
-![screenshot](https://user-images.githubusercontent.com/2557889/223729837-66461127-997c-4ce4-9183-9d2b85219a07.png)
+![helptext](https://github.com/HikariKnight/ls-iommu/assets/2557889/4c04e171-5b21-4858-8810-76daa7d15303)
+![gpu output](https://github.com/HikariKnight/ls-iommu/assets/2557889/a6ef282b-dc25-493b-8a7c-3f5cd8fcff3f)
+![getting info from specific devices](https://github.com/HikariKnight/ls-iommu/assets/2557889/19bf09d6-76e6-47c7-8875-3aa73c327e15)
+![display specific info](https://github.com/HikariKnight/ls-iommu/assets/2557889/c0453d50-db09-4d41-8701-59477a567654)
+
 
 ## Features
 * Has a flag to generate default ouptut text compatible with the bash version of ls-iommu (`--legacy`)

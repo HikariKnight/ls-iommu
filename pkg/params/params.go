@@ -47,6 +47,12 @@ func NewParams() *Params {
 	// Setup the parser for arguments
 	parser := argparse.NewParser("ls-iommu", "A Tool to print out all devices and their IOMMU groups")
 
+	// Add version flag
+	version := parser.Flag("v", "version", &argparse.Options{
+		Required: false,
+		Help:     "Display the version of ls-iommu",
+	})
+
 	// Configure arguments
 	gpu := parser.Flag("g", "gpu", &argparse.Options{
 		Required: false,
@@ -143,6 +149,9 @@ func NewParams() *Params {
 		StringList:  make(map[string][]string),
 		String:      make(map[string]string),
 	}
+
+	// Add version flag
+	pArg.addFlag("version", *version)
 
 	// Add all parsed arguments to a struct for portability since we will use them all over the program
 	pArg.addFlag("gpu", *gpu)

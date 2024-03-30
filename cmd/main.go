@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/HikariKnight/ls-iommu/internal/version"
 	iommu "github.com/HikariKnight/ls-iommu/pkg/iommu"
 	params "github.com/HikariKnight/ls-iommu/pkg/params"
 )
@@ -10,6 +12,12 @@ import (
 func main() {
 	// Get all our arguments in 1 neat struct
 	pArg := params.NewParams()
+
+	// Display version and exit if the version flag is present
+	if pArg.Flag["version"] {
+		fmt.Printf("ls-iommu version %s built in Go\n", version.Version)
+		os.Exit(0)
+	}
 
 	// Work with the output depending on arguments given
 	if pArg.Flag["gpu"] {

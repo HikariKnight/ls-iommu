@@ -24,6 +24,10 @@ func main() {
 		// Get all GPUs (3d controllers are ignored)
 		output := iommu.MatchSubclass(`VGA`, pArg)
 
+		// Get all 3D controllers
+		controller3d := iommu.MatchSubclass(`3D`, pArg)
+		output = append(output, controller3d...)
+
 		// Print the output and exit
 		iommu.PrintOutput(output, pArg)
 		os.Exit(0)

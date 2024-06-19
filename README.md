@@ -39,7 +39,9 @@ This will build the latest `ls-iommu` and set the version to the latest commit h
 ```bash
 git clone https://github.com/HikariKnight/ls-iommu.git
 cd ls-iommu
+go mod download
 CGO_ENABLED=0 go build -ldflags="-X github.com/HikariKnight/ls-iommu/internal/version.Version=$(git rev-parse --short HEAD)" -o ls-iommu cmd/main.go
 ```
+NOTE: you can build with newer dependencies (can break things) by running `go get -u ./cmd` after `go mod download`
 
 The binary `ls-iommu` will now be located the root of the project directory.

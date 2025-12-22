@@ -6,7 +6,12 @@ It's purpose was to just list every device and their associated IOMMU group.
 
 This project does the same thing, but extends the functionality by implementing arguments to list the output in different ways or provide just the details needed without having to hop through grep, sed, awk or perl pipe hoops.
 
+## Installation
+### All Distributions
 You can [download the latest release](https://github.com/HikariKnight/ls-iommu/releases/) from the releases page
+
+### Fedora
+`ls-iommu` is installable as a package through the [Terra](https://terra.fyralabs.com/) repository.
 
 ## Features
 Currently the program supports the same behavior as Wendell's ls-iommu script but can also be told to display:
